@@ -154,6 +154,11 @@
       scrollbar-color: var(--line) transparent;
     }
 
+    .textfield.lang-ja textarea,
+    .row .ja {
+      font-family: var(--font-ja);
+    }
+
     .textfield textarea:focus {
       border-color: var(--faint);
       outline: none;

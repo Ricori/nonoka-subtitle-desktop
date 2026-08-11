@@ -59,7 +59,9 @@
     radial-gradient(620px 360px at 94% 116%, rgba(246, 207, 111, .07), transparent 70%),
     radial-gradient(720px 300px at 50% 120%, rgba(240, 160, 180, .05), transparent 70%),
     var(--bg);
-  --font-ui: '方正准圆_GBK', "Segoe UI Variable Text", "Segoe UI", "Yu Gothic UI", "Meiryo", system-ui, sans-serif;
+  /* 拉丁走系统原生（Win11 的 Segoe UI Variable 打头），CJK 兜底必须是中文字体：
+     页面是 zh-CN，日文字体排前面会让中文整体套上日文字形 */
+  --font-ui: "Segoe UI Variable Text", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, "Microsoft YaHei UI", "PingFang SC", sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
   --font-mono: "Cascadia Code", Consolas, ui-monospace, monospace;
 }
 

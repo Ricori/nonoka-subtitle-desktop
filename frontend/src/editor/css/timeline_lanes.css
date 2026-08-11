@@ -283,6 +283,10 @@
       color: color-mix(in srgb, var(--zh) 35%, var(--text));
     }
 
+    .lane.ja .blk .txt {
+      font-family: var(--font-ja);
+    }
+
     .blk .h {
       flex: none;
       width: 7px;
