@@ -36,6 +36,8 @@ go install github.com/wailsapp/wails/v3/cmd/wails3
 go install github.com/go-task/task/v3/cmd/task
 ```
 
+之后为 task 配置环境变量。
+
 ### 2. 启动开发环境
 
 在项目目录下执行，会同时拉起 Go 后端与 Vite 前端热更新服务器：
