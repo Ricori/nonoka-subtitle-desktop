@@ -29,10 +29,14 @@ export function taskProgress(v: RemoteVideo | null | undefined): number {
 
 // 用已耗时按当前进度线性外推。前 6% 和刚起步的 30 秒噪声太大，不给数
 export function etaText(v: RemoteVideo | null | undefined): string {
+  // 排队时还没开工，本来就估不出来；说「估算中」会让人以为界面坏了，如实说在排队
+  if (v?.status === "queued") return "排队等待中…";
   const p = taskProgress(v) / 100;
-  if (!v || !v.created_at || p <= 0.06 || p >= 1) return "预计时长估算中…";
-  const elapsed = Date.now() / 1000 - v.created_at;
-  if (elapsed < 30) return "预计时长估算中…";
+  if (!v || !v.created_at || p >= 1) return "预计时长估算中…";
+  const elapsed = Math.max(0, Date.now() / 1000 - v.created_at);
+  // 外推噪声太大时不给数，但要把已耗时显出来：短片（服务端只切 1 块）整个任务
+  // 都在闸门内，否则从头到尾就是一句不动的「估算中」，看着像界面卡死
+  if (p <= 0.06 || elapsed < 12) return `已用时 ${fmtDur(elapsed)}`;
   return `约还需 ${Math.max(1, Math.round(elapsed * (1 - p) / p / 60))} 分钟`;
 }
 
@@ -112,14 +116,22 @@ export const PIPE_TEXT: Record<string, string> = { audio: "抽音频", upload: "
 // ── 合并数据源 ─────────────────────────────────────────────────────────────────
 // 首页列表 = 服务端记录（唯一真源）∪ 本地尚未转写的导入条目。
 // 匹配先按 videoId，再按 fp 兜住「网页版曾传过同一文件」的情况并自动关联。
-export function mergeLibrary(lib: LibraryEntry[], remote: RemoteVideo[], forcedVisible: Set<string>): MergedVideoItem[] {
+export function mergeLibrary(lib: LibraryEntry[], remote: RemoteVideo[]): MergedVideoItem[] {
   const byId = new Map(lib.map(e => [e.id, e]));
-  const byFp = new Map(lib.filter(e => e.fp).map(e => [e.fp, e]));
+  // 同 fp 撞车时留本机条目：云端占位条目没有源文件/缓存，拿它当匹配结果卡片会变成空壳，
+  // 真正的本机条目又因为没被 used 标记而另出一张，同一个视频分裂成两张卡
+  const byFp = new Map<string, LibraryEntry>();
+  for (const e of lib) {
+    const prev = e.fp ? byFp.get(e.fp) : undefined;
+    if (e.fp && (!prev || (prev.cloudOnly && !e.cloudOnly))) byFp.set(e.fp, e);
+  }
   const used = new Set<string>();
   const out: MergedVideoItem[] = [];
 
   for (const v of remote) {
-    const local = byId.get(v.video_id) || (v.fp ? byFp.get(v.fp) : undefined);
+    // byId 命中的可能正是那个空壳占位条目，这时改用 fp 找回本机条目
+    const hit = byId.get(v.video_id);
+    const local = hit && !hit.cloudOnly ? hit : (v.fp ? byFp.get(v.fp) : undefined) || hit;
     if (local) used.add(local.id);
     out.push({
       id: v.video_id,
@@ -141,7 +153,9 @@ export function mergeLibrary(lib: LibraryEntry[], remote: RemoteVideo[], forcedV
   }
   for (const e of lib) {
     if (used.has(e.id)) continue;
-    if (!e.id.startsWith("loc_") && !forcedVisible.has(e.id)) continue;
+    // 只滤掉云端同步下来的占位条目：它们没有本机文件，云端记录没了就该跟着消失。
+    // 不能按 id 前缀判断——loc_ 前缀在提交转写时就被换成云端 video_id 了
+    if (e.cloudOnly) continue;
     out.push({
       id: e.id, localId: e.id, title: e.title, size: e.size, duration: e.duration,
       width: e.width, height: e.height, addedAt: e.addedAt, srcPath: e.srcPath,
@@ -153,6 +167,10 @@ export function mergeLibrary(lib: LibraryEntry[], remote: RemoteVideo[], forcedV
 }
 
 // ── 卡片状态派生（纯函数，供 VideoCard 渲染用）──────────────────────────────────
+// 缓存 / 缩略图 / 源文件一律按本地条目 id 存：换 key 重转后条目 id 会跟云端 video_id 脱钩，
+// 拿 it.id 去查就会查空
+export const localKey = (it: MergedVideoItem) => it.localId || it.id;
+
 export const onPipe = (pipe: PipeState | null | undefined, it: MergedVideoItem) =>
   !!pipe && pipe.cardId === it.id;
 

@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { PopoverMenu } from './PopoverMenu';
 import { VideoThumb } from './VideoThumb';
 import { toast } from '../lib/notify';
@@ -9,7 +9,7 @@ import { cancelPipe, pipelineStore, startTranscribe, stopTask } from '../store/p
 import { closePopover, togglePopover } from '../store/uiStore';
 import {
   PHASE_TEXT, RUNNING, taskProgress, etaText, fmtSize, fmtDur, fmtDate,
-  onPipe, pipeLabel, pipePct, inR2, blockReason,
+  onPipe, pipeLabel, pipePct, inR2, blockReason, localKey,
 } from '../utils';
 import type { MergedVideoItem, PipeState } from '../types';
 
@@ -64,15 +64,24 @@ function VideoCardImpl({ it }: { it: MergedVideoItem }) {
   const pipe = pipelineStore.use(s => s.pipe && s.pipe.cardId === it.id ? s.pipe : null);
   const busyOther = libraryStore.use(s => s.busyOther);
   const cloudBusy = libraryStore.use(s => s.cloudBusy);
-  const cached = libraryStore.use(s => s.cachedSet.has(it.id));
-  const hasSrc = libraryStore.use(s => s.srcSet.has(it.id));
+  const cached = libraryStore.use(s => s.cachedSet.has(localKey(it)));
+  const hasSrc = libraryStore.use(s => s.srcSet.has(localKey(it)));
 
   const moreRef = useRef<HTMLButtonElement>(null);
-  const key = it.localId || it.id;
-  const thumbId = it.localId || it.id;
+  const key = localKey(it);
+  const thumbId = localKey(it);
 
   const cloud = RUNNING.has(it.status);
   const running = cloud || onPipe(pipe, it);
+
+  // etaText 吃 Date.now()，但卡片只在轮询带来字段变化时才重渲染（20s 一次），
+  // 「已耗时」不会自己走。跑起来的那张卡自己每秒走一拍（同时最多一个云端任务）
+  const [, tick] = useState(0);
+  useEffect(() => {
+    if (!cloud) return;
+    const t = setInterval(() => tick(n => n + 1), 1000);
+    return () => clearInterval(t);
+  }, [cloud]);
   const res = it.height ? `${it.height}p` : "";
   // 云端转写中时把 ETA 顶到信息行；纯云端记录（没匹配到本地库条目）拿不到 size/duration/分辨率
   const metaBits = cloud ? etaText(it.remote)

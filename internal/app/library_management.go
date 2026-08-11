@@ -128,11 +128,10 @@ func (s *DesktopService) RenameLibraryID(oldID, newID string) (bool, error) {
 	s.cacheMu.Lock()
 	defer s.cacheMu.Unlock()
 	s.mu.Lock()
-	index := -1
+	index, occupied := -1, -1
 	for current := range s.library {
 		if s.library[current].ID == newID {
-			s.mu.Unlock()
-			return false, errors.New("目标媒体 ID 已存在")
+			occupied = current
 		}
 		if s.library[current].ID == oldID {
 			index = current
@@ -141,6 +140,19 @@ func (s *DesktopService) RenameLibraryID(oldID, newID string) (bool, error) {
 	if index < 0 {
 		s.mu.Unlock()
 		return false, nil
+	}
+	previous := append([]libraryDiskEntry(nil), s.library...)
+	if occupied >= 0 {
+		// 云端占位条目是同一个视频的空壳：提交慢的时候，start 返回前的那次刷新就可能
+		// 把它先建出来，此时报「已存在」会让本地条目永远换不上主键，分裂成两张卡
+		if !s.library[occupied].CloudOnly {
+			s.mu.Unlock()
+			return false, errors.New("目标媒体 ID 已存在")
+		}
+		s.library = append(s.library[:occupied], s.library[occupied+1:]...)
+		if index > occupied {
+			index--
+		}
 	}
 
 	pairs := [][2]string{
@@ -161,7 +173,7 @@ func (s *DesktopService) RenameLibraryID(oldID, newID string) (bool, error) {
 	}
 	s.library[index].ID = newID
 	if err := s.saveLibraryLocked(); err != nil {
-		s.library[index].ID = oldID
+		s.library = previous
 		rollbackRenames(moved)
 		s.mu.Unlock()
 		return false, err

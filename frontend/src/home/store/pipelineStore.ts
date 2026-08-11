@@ -3,7 +3,7 @@ import { apiPost } from '../lib/apiClient';
 import { confirm, toast } from '../lib/notify';
 import { blockReason, errText } from '../utils';
 import { askSpeakers } from './glossaryStore';
-import { libraryStore, refresh, refreshCached, setLib } from './libraryStore';
+import { libraryStore, markStarted, refresh, refreshCached } from './libraryStore';
 import type { MergedVideoItem, PipeState } from '../types';
 
 // 转写流水线：抽音频 → /edit/upload/init → 流式 PUT → /edit/video/start → 换主键 → 轮询。
@@ -48,6 +48,9 @@ export async function startTranscribe(it: MergedVideoItem) {
   if (opts === null) return;   // 用户取消
   const { speakers, glossary } = opts;
 
+  // 换主键后 cachedSet 会按新 id 重建，这个判断得用换之前的答案
+  const wasCached = libraryStore.get().cachedSet.has(entry.id);
+
   setPipe({ cardId: it.id, localId: entry.id, vid: null, stage: "audio", done: 0, total: 0, msg: "准备中…", tmp: null });
 
   try {
@@ -81,13 +84,19 @@ export async function startTranscribe(it: MergedVideoItem) {
 
     // 5) 本地条目换主键，此后一切按服务端 video_id 对齐（缩略图/缓存一并改名）
     await window.desktop.renameLibraryId(entry.id, init.video_id);
-    setLib(await window.desktop.getLibrary());
+    markStarted(await window.desktop.getLibrary(), {
+      video_id: init.video_id, title: entry.title, fp: entry.fp,
+      created_at: Math.floor(Date.now() / 1000), media: "audio", status: "queued",
+    });
+    // 缓存/源文件集合还是按旧 id 建的，不趁早重算，角标会闪一下「视频缺失」——
+    // 全是本地 IPC，不用等下面那次慢刷新
+    await refreshCached();
 
     window.desktop.deleteTemp(audio.path);   // 上传成功才删：失败时留着可省一次重抽
     setPipe(null);
 
     // 6) 原视频复制进缓存（后台跑）
-    if (entry.srcPath && !libraryStore.get().cachedSet.has(entry.id)) {
+    if (entry.srcPath && !wasCached) {
       window.desktop.copyIntoCache(init.video_id, entry.srcPath)
         .then(() => refreshCached())
         .catch(() => { });

@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { createStore } from '../lib/createStore';
 import { ApiError, apiGet, apiPost, hasKey } from '../lib/apiClient';
 import { confirm, promptText, toast } from '../lib/notify';
-import { RUNNING, errText, mergeLibrary } from '../utils';
+import { RUNNING, errText, localKey, mergeLibrary } from '../utils';
 import { uiStore } from './uiStore';
 import { isReady, setAppPhase, setKeyOK, sessionStore, showKeybar, showLogin } from './sessionStore';
 import type { LibraryEntry, MergedVideoItem, RemoteVideo } from '../types';
@@ -32,9 +32,6 @@ export const libraryStore = createStore<LibraryState>({
   busyOther: false, loaded: false, merged: [], cloudBusy: false,
 });
 
-/** 显式导入过的跨 key 条目 */
-const forcedVisible = new Set<string>();
-
 /** 轮询定时器 */
 let pollTimer: ReturnType<typeof setTimeout> | undefined;
 /** 当前请求的Promise，没有就是 null */
@@ -49,11 +46,21 @@ function commit(patch: { lib?: LibraryEntry[]; remote?: RemoteVideo[] }) {
   const s = libraryStore.get();
   const lib = patch.lib ?? s.lib;
   const remote = patch.remote ?? s.remote;
-  const merged = mergeLibrary(lib, remote, forcedVisible);
+  const merged = mergeLibrary(lib, remote);
   libraryStore.set({ lib, remote, merged, cloudBusy: merged.some(it => RUNNING.has(it.status)) });
 }
 
 export const setLib = (lib: LibraryEntry[]) => commit({ lib });
+
+/**
+ * 提交成功后换主键
+ * 本地条目 id 已变成 video_id，此时 remote 里还没有这条，卡片会退回「未开始」直到 refresh 回来。
+ * 乐观塞一条 queued 顶上，下一轮 /edit/state 回来时被真数据覆盖。
+ */
+export function markStarted(lib: LibraryEntry[], v: RemoteVideo) {
+  const remote = libraryStore.get().remote;
+  commit({ lib, remote: remote.some(r => r.video_id === v.video_id) ? remote : [...remote, v] });
+}
 
 /** 搜索 + 排序后的展示列表。只有 VideoWall 用得上，放在组件侧算，store 里只存完整的 merged */
 export function useVisibleItems() {
@@ -76,13 +83,13 @@ export async function refreshCached(list?: MergedVideoItem[]) {
   const items = list || libraryStore.get().merged;
   const seq = ++cachedProbeSeq;
   const [cached, srcs] = await Promise.all([
-    Promise.all(items.map(it => window.desktop.hasCached(it.id))),
+    Promise.all(items.map(it => window.desktop.hasCached(localKey(it)))),
     Promise.all(items.map(it => it.srcPath ? window.desktop.fileExists(it.srcPath) : Promise.resolve(false))),
   ]);
   if (seq !== cachedProbeSeq) return;
   libraryStore.set({
-    cachedSet: new Set(items.filter((_, i) => cached[i]).map(it => it.id)),
-    srcSet: new Set(items.filter((_, i) => srcs[i]).map(it => it.id)),
+    cachedSet: new Set(items.filter((_, i) => cached[i]).map(localKey)),
+    srcSet: new Set(items.filter((_, i) => srcs[i]).map(localKey)),
   });
 }
 
@@ -172,7 +179,6 @@ export async function importPaths(paths: string[]) {
   if (!paths?.length) return;
   toast(`正在读取 ${paths.length} 个文件…`);
   const { added, failed } = await window.desktop.importVideos(paths);
-  for (const a of added) forcedVisible.add(a.id);
   setLib(await window.desktop.getLibrary());
   // 必须先重算 srcSet/cachedSet
   await refreshCached();
