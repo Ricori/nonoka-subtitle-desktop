@@ -1,14 +1,27 @@
 <div align="center">
   <h1>Nonoka Subtitle (Desktop)</h1>
+  <a href="https://github.com/Ricori/nonoka-subtitle-desktop/releases/latest"><img src="https://img.shields.io/github/v/release/Ricori/nonoka-subtitle-desktop?label=Release&color=4c1&sort=semver" alt="Release"></a>
+  <a href="https://github.com/Ricori/nonoka-subtitle-desktop/releases/latest"><img src="https://img.shields.io/badge/Download-Windows%20%7C%20macOS-2ea44f?logo=github&logoColor=white" alt="Download"></a>
+  <br>
   <a href="https://wails.io/"><img src="https://img.shields.io/badge/Wails-v3-blue.svg" alt="Wails"></a>
   <a href="https://golang.org/"><img src="https://img.shields.io/badge/Go-1.25+-00ADD8.svg" alt="Go"></a>
   <a href="https://reactjs.org/"><img src="https://img.shields.io/badge/React-19-61DAFB.svg" alt="React"></a>
-  <a href="./LICENSE"><img src="https://img.shields.io/badge/License-GPL_3.0-blue.svg" alt="License: GPL v3"></a>
 </div>
 
 <br>
 
 本项目是 Nonoka Subtitle 的桌面端，专为产出外语视频的译文字幕设计。项目提供全流程的视频管理、AI 字幕生成、字幕编辑、视频导出等能力，结合了 Aegisub 的专业性与剪映的便捷性，大幅降低字幕的制作门槛。
+
+## ⬇️ 下载
+
+前往 **[Releases 最新版本](https://github.com/Ricori/nonoka-subtitle-desktop/releases/latest)** 下载：
+
+| 平台 | 文件 | 说明 |
+| --- | --- | --- |
+| Windows | `Nonoka-Subtitle-<版本>-windows-amd64.exe` | 免安装单文件，双击即用 |
+| macOS | `Nonoka-Subtitle-<版本>-macOS.zip` | Intel 与 Apple Silicon 通用 |
+
+应用会自动检查更新，无需手动重复下载。
 
 ## ✨ 核心特性
 
