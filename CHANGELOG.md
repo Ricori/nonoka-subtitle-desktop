@@ -5,9 +5,11 @@
 
 ## 0.6.3
 
-- 修复主页无法调整窗口大小的 bug。
+- 修复主页无法调整窗口大小问题。
+- 修复提交任务后卡片状态不对问题。
+- 修复换 key 后视频不显示问题。
 - 优化编辑器渲染性能。
-- 完成桌面端子工程拆分。
+- 桌面端子工程拆分。
 - 新增 GitHub Actions 自动发布：版本号变更后自动编译 Windows 与 macOS 并创建 Release。
 - 项目更名为 Nonoka Subtitle，Go 模块路径调整为 `online.nonoka.subtitle/desktop`。
 - 补充 `.gitattributes`，统一换行符为 LF。
