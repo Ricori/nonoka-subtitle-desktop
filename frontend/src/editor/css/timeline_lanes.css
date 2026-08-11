@@ -1,0 +1,377 @@
+    /* 标签栏与轨道区之间的竖直分隔条：拖动改标签栏宽度（右边框也由它出，避免两条线） */
+    .lbl-split {
+      flex: none;
+      width: 6px;
+      border-right: 1px solid var(--line);
+      cursor: col-resize;
+      z-index: 3;
+    }
+
+    .lbl-split:hover,
+    .lbl-split.drag {
+      background: rgba(255, 180, 84, .3);
+    }
+
+    .tl-labels {
+      width: 160px;
+      flex: none;
+      display: flex;
+      flex-direction: column;
+      background: var(--panel);
+      z-index: 3;
+      /* 跟随轨道区纵向滚动（JS 同步 scrollTop），行间手柄也挂在这里一起滚 */
+      position: relative;
+      overflow-y: hidden;
+    }
+
+    .tl-labels .lbl {
+      display: flex;
+      flex: none;
+      /* 溢出时靠 scrollTop 跟随轨道区，不能被 flex 压缩——一压就与轨道行错位 */
+      align-items: center;
+      gap: 5px;
+      padding: 0 6px 0 8px;
+      font-size: 10px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--faint);
+      border-bottom: 1px solid var(--line-soft);
+      overflow: hidden;
+    }
+
+    .tl-labels .lbl i {
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+      flex: none;
+    }
+
+    /* 轨道名 + 右侧按钮（隐藏 / 设置） */
+    .lbl .tname {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .lbl.cur .tname {
+      color: var(--accent);
+    }
+
+    .lbl .lbtn {
+      flex: none;
+      width: 18px;
+      height: 18px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 3px;
+      color: var(--faint);
+    }
+
+    .lbl .lbtn:hover {
+      color: var(--text);
+      background: var(--raised);
+    }
+
+    .lbl .lbtn.off {
+      color: var(--warn);
+    }
+
+    /* 音频轨增益：显示当前倍率的文字按钮，比图标按钮宽一点 */
+    .lbl .lbtn.gain {
+      width: auto;
+      min-width: 26px;
+      padding: 0 4px;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0;
+      text-transform: none;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .lbl .lbtn.gain.on {
+      color: var(--accent);
+    }
+
+    /* 隐藏轨：标签压暗、lane 收窄且不显示块（保留标签行以便再点开） */
+    .lbl.hiddenlane {
+      opacity: .55;
+    }
+
+    .lane.hiddenlane {
+      background: color-mix(in srgb, var(--faint) 14%, transparent);
+    }
+
+    .lane.hiddenlane .blk,
+    .lane.hiddenlane .aggblk {
+      display: none;
+    }
+
+    /* 跨轨拖动中：字幕块当前会落进的那条轨，两条 lane 一起提亮 */
+    .lane.dropping {
+      background: var(--accent-dim);
+    }
+
+    /* 一键隐藏原文轨：与逐轨 hiddenlane 的 22px 标签行不同，整行彻底不占位 */
+    .lane.foldlane,
+    .lbl.foldlane {
+      display: none !important;
+    }
+
+    .lbl.ruler-spacer {
+      height: var(--ruler-h);
+      position: sticky;
+      top: 0;
+      z-index: 7;
+      /* 高过行间手柄（6），滚动时手柄不会浮到标尺行上 */
+      background: var(--panel);
+      border-bottom: 1px solid var(--line-soft);
+    }
+
+    .lbl.wave {
+      height: 48px;
+    }
+
+    .lbl.track {
+      height: 48px;
+    }
+
+    .lbl.wave i {
+      background: var(--faint);
+      border-radius: 50%;
+      width: 7px;
+      height: 7px;
+    }
+
+    .lbl.t-ja i {
+      background: var(--ja);
+    }
+
+    .lbl.t-zh i {
+      background: var(--zh);
+    }
+
+    /* 纵向滚动条自绘（见 .vscroll）：原生的会从容器顶端起、压在时间刻度上，
+       这里让它从标尺下方开始，所以纵向关掉原生条，只留 scrollTop 编程滚动 */
+    .tl-scroll {
+      flex: 1;
+      min-width: 0;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scrollbar-width: thin;
+      scrollbar-color: var(--line) transparent;
+      position: relative;
+    }
+
+    .tl-inner {
+      position: relative;
+      min-height: 100%;
+    }
+
+    /* 标尺高度：无切片时就这么高，有切片时由 syncClipsUI() 按层数写成内联值覆盖。
+       行分隔线的位置靠 rulerH() 现量 offsetHeight，不会跟这里对不上。 */
+    .timeline {
+      --ruler-h: 26px;
+    }
+
+    /* 轨道多到超过可视高度时纵向滚动，标尺钉在顶部不跟着滚 */
+    .ruler {
+      height: var(--ruler-h);
+      position: sticky;
+      top: 0;
+      z-index: 4;
+      background: var(--panel);
+      border-bottom: 1px solid var(--line-soft);
+      cursor: ew-resize;
+      user-select: none;
+    }
+
+    .ruler .tick {
+      position: absolute;
+      bottom: 0;
+      width: 1px;
+      height: 6px;
+      background: var(--line);
+    }
+
+    .ruler .tick.major {
+      height: 10px;
+      background: var(--faint);
+    }
+
+    .ruler .tick span {
+      position: absolute;
+      bottom: 9px;
+      left: 4px;
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      color: var(--faint);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    /* 轴末尾那个标签翻到刻度左边：否则它挑出轨道末端，凭空多出一截横向滚动 */
+    .ruler .tick.endlab span {
+      left: auto;
+      right: 4px;
+    }
+
+    .waverow {
+      height: 48px;
+      position: relative;
+      border-bottom: 1px solid var(--line-soft);
+      cursor: ew-resize;
+    }
+
+    .waverow canvas {
+      position: absolute;
+      top: 0;
+    }
+
+    .lane {
+      height: 48px;
+      position: relative;
+      border-bottom: 1px solid var(--line-soft);
+    }
+
+    .blk {
+      position: absolute;
+      top: 5px;
+      bottom: 5px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      cursor: grab;
+      user-select: none;
+      border: 1px solid transparent;
+    }
+
+    .blk:active {
+      cursor: grabbing;
+    }
+
+    .lane.ja .blk {
+      background: color-mix(in srgb, var(--ja) 20%, transparent);
+      border-color: color-mix(in srgb, var(--ja) 55%, transparent);
+    }
+
+    .lane.zh .blk {
+      background: color-mix(in srgb, var(--zh) 16%, transparent);
+      border-color: color-mix(in srgb, var(--zh) 50%, transparent);
+    }
+
+    .blk.lowconf {
+      border-color: color-mix(in srgb, var(--accent) 65%, transparent);
+    }
+
+    .blk .txt {
+      flex: 1;
+      padding: 0 8px;
+      font-size: 11px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--text);
+      pointer-events: none;
+    }
+
+    .lane.zh .blk .txt {
+      color: color-mix(in srgb, var(--zh) 35%, var(--text));
+    }
+
+    .blk .h {
+      flex: none;
+      width: 7px;
+      align-self: stretch;
+      cursor: ew-resize;
+    }
+
+    .blk .h.l {
+      border-left: 2px solid color-mix(in srgb, var(--text) 28%, transparent);
+      border-radius: 4px 0 0 4px;
+    }
+
+    .blk .h.r {
+      border-right: 2px solid color-mix(in srgb, var(--text) 28%, transparent);
+      border-radius: 0 4px 4px 0;
+    }
+
+    .blk.sel {
+      border-color: var(--accent) !important;
+      box-shadow: 0 0 0 1px var(--accent), 0 2px 10px color-mix(in srgb, var(--accent) 15%, transparent);
+      z-index: 2;
+    }
+
+    .blk.sel .h.l {
+      border-left-color: var(--accent);
+    }
+
+    .blk.sel .h.r {
+      border-right-color: var(--accent);
+    }
+
+    /* 密度块：缩到极小时一串窄块并成一条，纯视觉提示，不接事件 */
+    .aggblk {
+      position: absolute;
+      top: 6px;
+      bottom: 6px;
+      border-radius: 2px;
+      pointer-events: none;
+    }
+
+    .lane.ja .aggblk {
+      background: color-mix(in srgb, var(--ja) 45%, transparent);
+    }
+
+    .lane.zh .aggblk {
+      background: color-mix(in srgb, var(--zh) 40%, transparent);
+    }
+
+    .aggblk.sel {
+      border: 1px solid var(--accent);
+      box-shadow: 0 0 0 1px var(--accent), 0 2px 10px color-mix(in srgb, var(--accent) 15%, transparent);
+    }
+
+    /* 多选拖出的框选矩形：盖在字幕块之上、播放头之下（playhead z=5） */
+    .marquee {
+      position: absolute;
+      z-index: 4;
+      border: 1px solid var(--accent);
+      background: color-mix(in srgb, var(--accent) 14%, transparent);
+      border-radius: 2px;
+      pointer-events: none;
+    }
+
+    .playhead {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 0;
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    .playhead::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: -0.75px;
+      width: 1.5px;
+      background: var(--accent);
+      box-shadow: 0 0 6px color-mix(in srgb, var(--accent) 50%, transparent);
+    }
+
+    .playhead::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -5.5px;
+      border: 5.5px solid transparent;
+      border-top: 7px solid var(--accent);
+    }
+

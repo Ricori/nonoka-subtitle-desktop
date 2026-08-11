@@ -1,0 +1,162 @@
+@font-face {
+  font-family: '方正准圆_GBK';
+  src: local('方正准圆_GBK'),
+    local('FZ-ZhunYuan-GBK'),
+    url('./fonts/FZZhunYuan.woff2') format('woff2');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: '荆南波波黑';
+  src: local('荆南波波黑'),
+    local('JingNanBoBoHei'),
+    url('./fonts/JingNanBoBoHei.woff2') format('woff2');
+  font-display: swap;
+}
+
+/* ── 双主题 ─────────────────────────────────────
+  · 暗色「星夜」：深蓝帽衫色打底、瞳蓝做主色
+  · 亮色「白丝带」：暖白打底、金发金做主色、瞳蓝做次色
+  渲染进程加载后按当前主题通过 ui:set-overlay 覆盖（见 applyTheme）。
+*/
+:root {
+  color-scheme: dark;
+  --bg: #171b2a;
+  --panel: #1e2333;
+  --raised: #293047;
+  --line: #38405c;
+  --line-soft: #2e364e;
+  --text: #eef1f9;
+  --mut: #a0aac8;
+  --faint: #6b7494;
+  --accent: #8ea6f2;
+  --accent2: #f6cf6f;
+  --info: #8ea6f2;
+  --accent-dim: rgba(142, 166, 242, .13);
+  --accent-line: rgba(142, 166, 242, .35);
+  --accent-border: rgba(142, 166, 242, .45);
+  --grad: linear-gradient(120deg, #8ea6f2, #bcc9f8);
+  --on-grad: #1c2340;
+  --hero-shadow: rgba(142, 166, 242, .25);
+  --btn-hover-bg: #333b55;
+  --btn-hover-line: #465178;
+  --thumb-bg: #10141f;
+  /* 占位封面渐变：色相 --ph-h 由卡片按 id 哈希写入，这里只定饱和度/亮度。*/
+  --ph-s: 38%;
+  --ph-l1: 24%;
+  --ph-l2: 36%;
+  --ph-glow: .08;
+  --ok: #7fdcc4;
+  --warn: #ff8fa3;
+  --mask-bg: rgba(10, 13, 22, .55);
+  --drop-bg: rgba(23, 27, 42, .9);
+  --card-shadow: 0 10px 28px rgba(0, 0, 0, .42);
+  --shadow-pop: 0 14px 34px rgba(0, 0, 0, .5);
+  /* 页面底色带光晕：瞳蓝/金发金压底部两角，中间揉一点立绘同款暖粉室内光；
+    顶部一条保持纯 --bg，保证与 Windows 原生按钮带颜色完全一致 */
+  --page-bg:
+    radial-gradient(560px 320px at 8% 112%, rgba(142, 166, 242, .10), transparent 70%),
+    radial-gradient(620px 360px at 94% 116%, rgba(246, 207, 111, .07), transparent 70%),
+    radial-gradient(720px 300px at 50% 120%, rgba(240, 160, 180, .05), transparent 70%),
+    var(--bg);
+  --font-ui: '方正准圆_GBK', "Segoe UI Variable Text", "Segoe UI", "Yu Gothic UI", "Meiryo", system-ui, sans-serif;
+  --font-mono: "Cascadia Code", Consolas, ui-monospace, monospace;
+}
+
+body.light {
+  color-scheme: light;
+  --bg: #faf6ec;
+  --panel: #ffffff;
+  --raised: #f3edda;
+  --line: #e0d6b8;
+  --line-soft: #eae2cc;
+  --text: #333a52;
+  --mut: #767c96;
+  --faint: #a0a5ba;
+  --accent: #dfa32c;
+  --accent2: #5b74d6;
+  --info: #5b74d6;
+  --accent-dim: rgba(223, 163, 44, .14);
+  --accent-line: rgba(223, 163, 44, .45);
+  --accent-border: rgba(223, 163, 44, .55);
+  --grad: linear-gradient(120deg, #f5c95c, #fadf9b);
+  --on-grad: #4a3708;
+  --hero-shadow: rgba(223, 163, 44, .3);
+  --btn-hover-bg: #efe6cd;
+  --btn-hover-line: #d5c9a2;
+  --thumb-bg: #e8e3d3;
+  /* 亮色占位封面：粉彩糖果色，高光亮一些 */
+  --ph-s: 62%;
+  --ph-l1: 87%;
+  --ph-l2: 78%;
+  --ph-glow: .5;
+  --ok: #1f9d77;
+  --warn: #d8485f;
+  --mask-bg: rgba(70, 62, 40, .35);
+  --drop-bg: rgba(250, 246, 236, .92);
+  --card-shadow: 0 10px 24px rgba(96, 80, 35, .16);
+  --shadow-pop: 0 14px 34px rgba(96, 80, 35, .22);
+  --page-bg:
+    radial-gradient(560px 320px at 8% 112%, rgba(245, 201, 92, .20), transparent 70%),
+    radial-gradient(620px 360px at 94% 116%, rgba(91, 116, 214, .12), transparent 70%),
+    radial-gradient(720px 300px at 50% 120%, rgba(240, 160, 180, .10), transparent 70%),
+    var(--bg);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+#root {
+  display: contents;
+}
+
+body {
+  margin: 0;
+  background: var(--page-bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  /* 圆体只有单字重 */
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  user-select: none;
+}
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+/* body 的 user-select:none 会继承进 input，导致点击无法落光标，必须显式放开 */
+input,
+textarea {
+  user-select: text;
+}
+
+/* ── 应用状态闸门 ─────────────────────────────────────
+  data-app = boot（验证中）| login（待输入 key）| ready（已登录）。
+  未 ready 前主界面一律不渲染。 */
+body:not([data-app="ready"]) .topbar,
+body:not([data-app="ready"]) .keybar,
+body:not([data-app="ready"]) .toolsrow,
+body:not([data-app="ready"]) .wall,
+body:not([data-app="ready"]) #drop {
+  display: none !important;
+}
+
+/* 渐变填充的「字幕」二字，boot/顶栏/登录页三处共用 */
+.brand span,
+.grad {
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+

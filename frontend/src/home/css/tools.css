@@ -1,0 +1,317 @@
+/* ── 添加入口 + 工具条（顶栏之下、卡片墙之上） */
+.toolsrow {
+  flex: 0 0 auto;
+  padding: 14px 20px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.toolsrow[hidden] {
+  display: none;
+}
+
+.hero {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 16px 20px;
+  background: var(--grad);
+  border: none;
+  border-radius: 16px;
+  color: var(--on-grad);
+  text-align: left;
+  cursor: pointer;
+  transition: transform .13s, box-shadow .13s, filter .13s;
+}
+
+.hero:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+  box-shadow: 0 10px 28px var(--hero-shadow);
+}
+
+/* 整块横幅按下去轻轻缩一下再弹回来 */
+.hero:active {
+  transform: scale(.985);
+  transition: transform .16s cubic-bezier(.34, 1.56, .64, 1);
+}
+
+.hero-icon {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, .32);
+  border-radius: 50%;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.hero-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.hero-title {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.hero-hint {
+  font-size: 12px;
+  color: color-mix(in srgb, var(--on-grad) 78%, transparent);
+}
+
+.hero-deco {
+  margin-left: auto;
+  font-size: 17px;
+  opacity: .55;
+  letter-spacing: 6px;
+  white-space: nowrap;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.toolbar-count {
+  font-size: 12.5px;
+  color: var(--faint);
+  white-space: nowrap;
+}
+
+.toolbar-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.search-wrap {
+  position: relative;
+  width: 210px;
+}
+
+.search-wrap .search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--faint);
+  font-size: 13px;
+  pointer-events: none;
+}
+
+.search {
+  width: 100%;
+  padding: 7px 12px 7px 32px;
+  background: var(--raised);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+  transition: border-color .13s, box-shadow .13s;
+}
+
+.search:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+.sortsel {
+  padding: 7px 28px 7px 14px;
+  background: var(--raised);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 12.5px;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23a0aac8'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+
+body.light .sortsel {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23767c96'/%3E%3C/svg%3E");
+}
+
+.viewtoggle {
+  display: flex;
+  background: var(--raised);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.vbtn {
+  width: 32px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--mut);
+  font-size: 14px;
+  transition: background .12s, color .12s;
+}
+
+.vbtn.on {
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+
+.vbtn:not(.on):hover {
+  background: color-mix(in srgb, var(--text) 7%, transparent);
+  color: var(--text);
+}
+
+.btn {
+  padding: 7px 15px;
+  background: var(--raised);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  /* transform 用回弹曲线：按下 scale(.95) 松手时 Q 弹回来 */
+  transition: background .12s, border-color .12s, filter .12s,
+    transform .16s cubic-bezier(.34, 1.56, .64, 1);
+}
+
+.btn:hover {
+  background: var(--btn-hover-bg);
+  border-color: var(--btn-hover-line);
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(.95);
+}
+
+.btn.primary {
+  background: var(--grad);
+  border-color: transparent;
+  color: var(--on-grad);
+  font-weight: 600;
+}
+
+.btn.primary:hover {
+  background: var(--grad);
+  filter: brightness(1.07);
+}
+
+.btn.icon {
+  padding: 7px 11px;
+  font-size: 15px;
+}
+
+/* 顶栏图标按钮：故意不用 .btn 的实底+边框样式——那样在系统原生按钮旁边显得
+  是个突兀的方块。这里做成扁平的，只在 hover 时给一点高亮，让它和右侧
+  titleBarOverlay 里的原生按钮看起来是同一条色带，而不是两截拼起来的。 */
+.tbtn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  color: var(--mut);
+  transition: background .12s, color .12s;
+}
+
+.tbtn:hover,
+.tbtn.on {
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+
+/* 更新角标：新版本静默下载完成后才出现 */
+.tbtn.update[hidden] {
+  display: none;
+  /* .tbtn 的 display:flex 会盖过 hidden 属性的 UA 样式 */
+}
+
+.tbtn.update {
+  width: auto;
+  padding: 0 12px;
+  font-size: 12px;
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+
+/* 窗口标题栏下拉菜单：挂在 .topbar 外面用 fixed 定位
+  标题栏整条是窗口拖动区，菜单必须 no-drag，且不能被标题栏 48px 的高度裁掉。
+  具体的 top/right 打开时由 JS 按按钮实际位置算（见 toggleMenu）
+  这里不能照抄.topbar 那条 env(titlebar-area-*) 表达式，它在 mac 上算出来是负值，padding
+  会被夹到 0 看不出来，right 可不会，菜单会整个跑到窗口外面去。 */
+.topmenu {
+  position: fixed;
+  top: 44px;
+  right: 12px;
+  z-index: 60;
+  min-width: 150px;
+  padding: 5px;
+  background: var(--raised);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--shadow-pop);
+  -webkit-app-region: no-drag;
+  display: none;
+}
+
+.topmenu.on {
+  display: block;
+}
+
+.topmenu button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 8px 10px;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 13px;
+  text-align: left;
+}
+
+.topmenu button:hover {
+  background: var(--panel);
+}
+
+.topmenu button.danger {
+  color: var(--warn);
+}
+
+.topmenu .ico {
+  width: 16px;
+  text-align: center;
+  opacity: .8;
+}
+
+.btn:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+  filter: none;
+}
+
+.btn.danger {
+  color: var(--warn);
+  border-color: color-mix(in srgb, var(--warn) 35%, transparent);
+}
+

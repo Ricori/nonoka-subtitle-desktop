@@ -1,0 +1,282 @@
+/* ── 卡片墙 ───────────────────────────────────────── */
+.wall {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 20px 20px;
+  /* 右/下留 6px 空隙，让滚动条离开窗口真实边缘——否则它和系统缩放热区
+    重叠，右下角拖拽经常被滚动条截胡而不是触发 resize */
+  margin: 0 6px 6px 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  align-content: start;
+  /* 必须写死 max-content：这里是个高度确定的滚动容器，auto 行轨在这种情况下
+    会算出比卡片内容还矮的高度，列表视图里横排封面被挤出卡片上下边，
+    左上角的状态徽标跟着跑到卡片外面（窗口一矮就复现） */
+  grid-auto-rows: max-content;
+}
+
+.wall::-webkit-scrollbar {
+  width: 10px;
+}
+
+.wall::-webkit-scrollbar-thumb {
+  background: var(--raised);
+  border-radius: 5px;
+}
+
+.wall::-webkit-scrollbar-thumb:hover {
+  background: var(--line);
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line-soft);
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform .13s, border-color .13s, box-shadow .13s;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  border-color: var(--accent-border);
+  box-shadow: var(--card-shadow), 0 0 0 3px var(--accent-dim);
+}
+
+.thumb {
+  position: relative;
+  aspect-ratio: 16/9;
+  background: var(--thumb-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* 缩略图缺失时的占位（云端条目本机无文件，抽不到帧）：按视频 id 确定性地
+  随机一张nonoka差分 + 一个渐变色相（phFace / phHue） */
+.thumb .ph {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(120% 95% at 84% -12%, rgba(255, 255, 255, var(--ph-glow)), transparent 55%),
+    linear-gradient(135deg,
+      hsl(var(--ph-h, 222) var(--ph-s) var(--ph-l1)),
+      hsl(calc(var(--ph-h, 222) + 42) var(--ph-s) var(--ph-l2)));
+}
+
+/* nonoka差分：按封面高度等比缩放，立绘自带透明底，投影让她从渐变上浮起来一点 */
+.thumb .ph-face {
+  height: 78%;
+  width: auto;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, .22));
+}
+
+.badge {
+  position: absolute;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(13, 16, 26, .82);
+  backdrop-filter: blur(3px);
+  white-space: nowrap;
+}
+
+.badge.dur {
+  right: 7px;
+  bottom: 7px;
+  font-family: var(--font-mono);
+  font-weight: 400;
+  color: #d5dbeb;
+}
+
+.badge.state {
+  left: 7px;
+  top: 7px;
+}
+
+/* 状态徽标压在缩略图的深色半透明底上，底色不随主题变，
+  所以这里用固定的亮色，不跟 --ok/--warn（它们在亮色主题下会变深） */
+.st-done {
+  color: #7fdcc4;
+}
+
+.st-run {
+  color: #bcc9f8;
+}
+
+.st-none {
+  color: #b9bfd4;
+}
+
+.st-err {
+  color: #ff9fb0;
+}
+
+.bar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 4px;
+  background: var(--grad);
+  border-radius: 0 999px 999px 0;
+  transition: width .4s;
+}
+
+.info {
+  padding: 12px 14px 4px;
+}
+
+.name {
+  font-size: 13.5px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 信息行：左边是大小/日期等元信息，右边是可用性小胶囊 */
+.meta {
+  margin-top: 5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  color: var(--mut);
+}
+
+.meta .meta-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: auto;
+}
+
+.chip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 9px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  border: 1px solid;
+  white-space: nowrap;
+}
+
+.chip.c-ok {
+  color: var(--ok);
+  border-color: color-mix(in srgb, var(--ok) 35%, transparent);
+  background: color-mix(in srgb, var(--ok) 8%, transparent);
+}
+
+.chip.c-cloud {
+  color: var(--info);
+  border-color: color-mix(in srgb, var(--info) 35%, transparent);
+  background: color-mix(in srgb, var(--info) 8%, transparent);
+}
+
+.chip.c-warn {
+  color: var(--warn);
+  border-color: color-mix(in srgb, var(--warn) 35%, transparent);
+  background: color-mix(in srgb, var(--warn) 8%, transparent);
+}
+
+.chip.c-share {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.actions {
+  display: flex;
+  gap: 6px;
+  padding: 10px 14px 14px;
+}
+
+.actions .btn {
+  flex: 1;
+  padding: 6px 0;
+  font-size: 12.5px;
+  text-align: center;
+}
+
+.actions .btn.icon {
+  flex: 0 0 auto;
+  padding: 6px 11px;
+}
+
+/* ── 列表视图 ─────────────────────────────────────────
+       独立成一套横排布局：小封面 + 撑满的信息区 + 定宽操作区。
+       网格那套 padding / flex:1 全部在这里改写，不再复用错位。 */
+.wall.list {
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.wall.list .card {
+  flex-direction: row;
+  align-items: center;
+  padding: 10px;
+}
+
+.wall.list .thumb {
+  width: 168px;
+  flex: 0 0 auto;
+  aspect-ratio: 16/9;
+  border-radius: 10px;
+}
+
+.wall.list .info {
+  flex: 1;
+  min-width: 0;
+  padding: 0 16px;
+}
+
+.wall.list .name {
+  font-size: 14px;
+}
+
+.wall.list .meta {
+  margin-top: 6px;
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+.wall.list .actions {
+  flex: 0 0 auto;
+  padding: 0;
+}
+
+.wall.list .actions .btn {
+  flex: 0 0 auto;
+  padding: 7px 18px;
+}
+
+.wall.list .actions .btn.icon {
+  padding: 7px 12px;
+}
+
+/* 空态/加载态是整墙唯一内容时，让它在墙里垂直居中。
+  只能用 :has 限定在「没有卡片」的情况下切：.wall 默认的 align-content:start
+  和 max-content 行轨是给卡片布局定的（见上面那条注释），为了空态去动它，
+  列表视图的封面又要被挤出卡片了。
+  safe 是必需的：窗口矮的时候立绘那一坨比墙还高，普通的 center 会把顶部溢出
+  的部分推到滚动区域外面，怎么滚都看不到；safe 在放不下时自动退回 start。 */
+.wall:has(> .empty) {
+  align-content: safe center;
+}
+

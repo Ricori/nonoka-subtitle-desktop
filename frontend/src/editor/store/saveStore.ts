@@ -1,0 +1,150 @@
+import { createStore } from '../../home/lib/createStore';
+import { ROW_H0 } from '../constants';
+import { apiUrl, authHeaders, backHome, getVid } from '../session';
+import { errText, p2, round3 } from '../utils';
+import { docStore } from './docStore';
+import { toast } from './uiStore';
+import { viewStore } from './viewStore';
+import type { Clip, Seg } from '../types';
+
+// 保存：手动（Ctrl+S / 保存按钮）+ 每 5 分钟自动一次（rev 乐观锁）。
+// 切片是另一条线：存本地 library.json，不吃 rev 乐观锁，也不会和别人的编辑撞车。
+
+interface SaveState {
+  dirty: boolean;
+  saving: boolean;
+  /** 409 后本地只读（继续编辑但不再保存） */
+  conflicted: boolean;
+  stateText: string;
+  stateCls: "" | "dirty" | "bad";
+}
+
+export const saveStore = createStore<SaveState>({
+  dirty: false, saving: false, conflicted: false, stateText: "已加载", stateCls: "",
+});
+
+const setSaveState = (stateText: string, stateCls: SaveState["stateCls"] = "") =>
+  saveStore.set({ stateText, stateCls });
+
+export const setLoadedState = () => setSaveState("已加载");
+
+/** 只标记「有未保存更改」，不再实时落盘——靠手动保存或 5 分钟定时保存 */
+export function markDirty() {
+  if (saveStore.get().conflicted) return;
+  saveStore.set({ dirty: true });
+  setSaveState("有未保存更改 · Ctrl+S 保存", "dirty");
+}
+
+const packSeg = (s: Seg, i: number) => {
+  const o: Record<string, unknown> = { seq: i + 1, t0: round3(s.t0), t1: round3(s.t1), ja: s.ja, zh: s.zh };
+  if (s.words) o.words = s.words;
+  if (s.low_conf) o.low_conf = true;
+  return o;
+};
+
+function savePayload() {
+  const d = docStore.get();
+  return {
+    rev: d.rev,
+    title: d.title,
+    subtitles: d.segs.map(packSeg),
+    tracks: d.tracks.map(tr => ({
+      id: tr.id, name: tr.name,
+      ja: { hidden: !!tr.ja.hidden, style: tr.ja.style || null },
+      zh: { hidden: !!tr.zh.hidden, style: tr.zh.style || null },
+      h_ja: tr.hja || ROW_H0, h_zh: tr.hzh || ROW_H0,
+      segs: tr.segs.map(packSeg),
+    })),
+    track_meta: d.trackMeta,
+  };
+}
+
+let queued = false;
+let saveTimer: ReturnType<typeof setInterval> | undefined;
+
+export async function doSave() {
+  const st = saveStore.get();
+  if (st.saving) { queued = true; return; }
+  if (!st.dirty || st.conflicted) return;
+  saveStore.set({ saving: true, dirty: false });
+  setSaveState("保存中…", "dirty");
+  try {
+    const r = await fetch(apiUrl(`/edit/${getVid()}`), {
+      method: "PUT",
+      headers: { ...authHeaders(), "Content-Type": "application/json" },
+      body: JSON.stringify(savePayload()),
+    });
+    if (r.status === 409) {
+      saveStore.set({ conflicted: true });
+      setSaveState("版本冲突，已停止保存", "bad");
+      toast("其他窗口保存过这个视频，本页改动无法写入——点击此处刷新加载最新版", true, () => location.reload());
+      return;
+    }
+    if (r.status === 401 || r.status === 403) { backHome({ unauthorized: true }); return; }
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const d = await r.json();
+    docStore.set({ rev: d.rev });
+    const dd = new Date();
+    setSaveState("已保存 " + p2(dd.getHours()) + ":" + p2(dd.getMinutes()));
+  } catch {
+    saveStore.set({ dirty: true });
+    setSaveState("保存失败 · Ctrl+S 重试", "bad");
+  } finally {
+    saveStore.set({ saving: false });
+    if (queued) { queued = false; void doSave(); }
+  }
+}
+
+// ── 切片保存 ──────────────────────────────────────────────────────
+let clipSaveVersion = 0, clipSavedVersion = 0;
+let clipSaveTail: Promise<boolean> = Promise.resolve(true);
+
+export const clipsDirty = () => clipSavedVersion < clipSaveVersion;
+
+export function saveClips() {
+  const version = ++clipSaveVersion;
+  const snapshot: Clip[] = viewStore.get().clips.map(c => ({ ...c }));
+  clipSaveTail = clipSaveTail.then(async () => {
+    const ok = await window.desktop.setClips(getVid(), snapshot);
+    if (!ok) throw new Error("本地媒体库中没有这个视频");
+    clipSavedVersion = version;
+    return true;
+  }).catch(e => {
+    toast("切片保存失败：" + errText(e));
+    return false;
+  });
+  return clipSaveTail;
+}
+
+export async function flushClips() {
+  await clipSaveTail;
+  return clipSavedVersion >= clipSaveVersion;
+}
+
+/** 重译/导出前先把本地改动落盘（服务端按落盘内容取上下文/导出） */
+export async function flushSave() {
+  let guard = 0;
+  while ((saveStore.get().dirty || saveStore.get().saving) && !saveStore.get().conflicted && guard++ < 40) {
+    if (!saveStore.get().saving) await doSave();
+    else await new Promise(r => setTimeout(r, 200));
+  }
+  await flushClips();
+}
+
+/** 手动保存（按钮 / Ctrl+S） */
+export async function manualSave() {
+  const st = saveStore.get();
+  if (st.conflicted) { toast("版本冲突，无法保存，请刷新页面"); return; }
+  if (!st.dirty && !st.saving && !clipsDirty()) { toast("没有需要保存的更改"); return; }
+  await Promise.all([doSave(), flushClips()]);
+}
+
+/** 每 5 分钟自动保存一次（仅在有未保存改动且未冲突时） */
+export function startAutosave(ms: number) {
+  clearInterval(saveTimer);
+  saveTimer = setInterval(() => {
+    const st = saveStore.get();
+    if (st.dirty && !st.saving && !st.conflicted) void doSave();
+  }, ms);
+  return () => clearInterval(saveTimer);
+}

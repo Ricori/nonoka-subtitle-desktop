@@ -1,0 +1,46 @@
+/* ── 启动加载态 ───────────────────────────────────── */
+#boot {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  background: inherit;
+  /* 这个状态下 .topbar 整个不渲染，窗口拖动/双击最大化得靠它自己顶着 */
+  -webkit-app-region: drag;
+}
+
+body[data-app="boot"] #boot {
+  display: flex;
+}
+
+#boot .brand {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: .4px;
+}
+
+/* 启动遮罩和卡片墙的加载态共用 */
+.spin {
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--raised);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+
+#boot .lead {
+  font-size: 12.5px;
+  color: var(--mut);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+

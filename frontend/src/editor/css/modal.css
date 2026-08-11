@@ -1,0 +1,132 @@
+    /* ── 弹窗（ASS 样式模板编辑）──────────── */
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      background: var(--mask-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal[hidden] {
+      display: none;
+    }
+
+    .modal .box {
+      position: relative;
+      width: min(760px, 92vw);
+      max-height: 88vh;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow-pop);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 14px;
+    }
+
+    .modal .box .x-close {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      color: var(--faint);
+      font-size: 15px;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .modal .box .x-close:hover {
+      background: var(--raised);
+      color: var(--text);
+    }
+
+    .modal .box h3 {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .modal .hint {
+      font-size: 11.5px;
+      color: var(--faint);
+      line-height: 1.5;
+    }
+
+    /* 确认/输入这类短弹窗单独放宽：默认那套尺寸是给 ASS 模板编辑器（760px 宽、
+       一大块 textarea）调的，套在两三行字的确认框上就显得又小又挤。
+       这里的观感对齐 index.html 的 .modal.ask，两个页面的确认框不该一宽一窄。 */
+    .modal .box.confirm {
+      width: min(480px, 92vw);
+      gap: 14px;
+      padding: 24px 26px 20px;
+      border-radius: 12px;
+    }
+
+    .modal .box.confirm h3 {
+      font-size: 15px;
+    }
+
+    .modal .box.confirm .hint {
+      font-size: 12.5px;
+      line-height: 1.65;
+      color: var(--mut);
+    }
+
+    .modal .box.confirm input {
+      padding: 8px 10px;
+      border-radius: 6px;
+    }
+
+    .modal .box.confirm .foot {
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .modal .box.confirm .foot .btn {
+      padding: 8px 16px;
+      font-size: 13px;
+      border-radius: 6px;
+    }
+
+    .modal input {
+      background: var(--raised);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      color: var(--text);
+      font: inherit;
+      padding: 6px 8px;
+      width: 100%;
+    }
+
+    .modal textarea {
+      flex: 1;
+      min-height: 300px;
+      resize: vertical;
+      background: var(--raised);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      line-height: 1.55;
+      padding: 8px 10px;
+      white-space: pre;
+      overflow: auto;
+    }
+
+    .modal .foot {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+

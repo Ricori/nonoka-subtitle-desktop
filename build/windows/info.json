@@ -1,0 +1,32 @@
+{
+	"fixed": {
+		"file_version": "0.6.2",
+		"product_version": "0.6.2"
+	},
+	"info": {
+		"0409": {
+			"ProductVersion": "0.6.2",
+			"CompanyName": "Takamichika",
+			"FileDescription": "Nonoka Subtitle",
+			"LegalCopyright": "© 2026 Takamichika",
+			"ProductName": "Nonoka Subtitle",
+			"Comments": "A local video subtitle editor."
+		},
+		"0411": {
+			"ProductVersion": "0.6.2",
+			"CompanyName": "Takamichika",
+			"FileDescription": "Nonoka Subtitle",
+			"LegalCopyright": "© 2026 Takamichika",
+			"ProductName": "Nonoka Subtitle",
+			"Comments": "A local video subtitle editor."
+		},
+		"0804": {
+			"ProductVersion": "0.6.2",
+			"CompanyName": "Takamichika",
+			"FileDescription": "Nonoka Subtitle",
+			"LegalCopyright": "© 2026 Takamichika",
+			"ProductName": "Nonoka Subtitle",
+			"Comments": "A local video subtitle editor."
+		}
+	}
+}

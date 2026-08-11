@@ -1,0 +1,11 @@
+{
+  "name": "nonoka-subtitle-release-tools",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test ../tests/*.test.mjs"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1091.0"
+  }
+}

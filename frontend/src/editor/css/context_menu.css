@@ -1,0 +1,41 @@
+    /* ── 右键菜单（时间轴上新建切片 / 切片本身的改名删除导出）── */
+    .ctxmenu {
+      position: fixed;
+      z-index: 60;
+      min-width: 150px;
+      padding: 4px;
+      background: var(--raised);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow-pop);
+      font-size: 12px;
+    }
+
+    .ctxmenu button {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 6px 10px;
+      border: 0;
+      border-radius: 5px;
+      background: none;
+      color: var(--text);
+      font: inherit;
+      font-family: var(--font-ui);
+      cursor: pointer;
+    }
+
+    .ctxmenu button:hover {
+      background: var(--accent-dim);
+    }
+
+    .ctxmenu button.danger:hover {
+      background: color-mix(in srgb, var(--warn) 22%, transparent);
+    }
+
+    .ctxmenu .sep {
+      height: 1px;
+      margin: 4px 2px;
+      background: var(--line);
+    }
+

@@ -1,0 +1,151 @@
+import { useEffect, useLayoutEffect, useRef } from 'react';
+import { shallowEqual } from '../../home/lib/createStore';
+import { setSubCanvasEl, setVideoEl } from '../lib/media';
+import { onPauseUI, onPlayUI, resetScrubWarned, setPlaying, isScrubbing } from '../lib/playback';
+import { attachChosen, pickVideoFile, showVideoFallback } from '../lib/videoSource';
+import { isSmokeMode } from '../session';
+import { docStore } from '../store/docStore';
+import { saveLayout } from '../store/layoutStore';
+import { playStore } from '../store/playStore';
+import { relayout, setDuration, syncZoomRange } from '../store/viewStore';
+import { videoStore } from '../store/videoStore';
+import { fmt } from '../utils';
+
+export function VideoStage() {
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const vs = videoStore.use(s => s, shallowEqual);
+  const { title, peaks } = docStore.use(s => ({ title: s.title, peaks: s.peaks }), shallowEqual);
+
+  useLayoutEffect(() => {
+    setVideoEl(videoRef.current);
+    setSubCanvasEl(canvasRef.current);
+    return () => { setVideoEl(null); setSubCanvasEl(null); };
+  }, []);
+
+  /** 视频舞台按视频真实宽高比适配（metadata 前默认 16:9） */
+  const fitStage = () => {
+    const wrap = wrapRef.current, stage = stageRef.current, v = videoRef.current;
+    if (!wrap || !stage) return;
+    const ar = (v?.videoWidth && v?.videoHeight) ? v.videoWidth / v.videoHeight : 16 / 9;
+    const W = wrap.clientWidth, H = wrap.clientHeight;
+    const w = Math.min(W, H * ar);
+    stage.style.width = w + "px";
+    stage.style.height = (w / ar) + "px";
+  };
+
+  useEffect(() => {
+    fitStage();
+    const ro = new ResizeObserver(fitStage);
+    if (wrapRef.current) ro.observe(wrapRef.current);
+    return () => ro.disconnect();
+  }, []);
+
+  // ── <video> 事件 ─────────────────────────────────────────────
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    const smoke = isSmokeMode();
+
+    const onPlay = () => {
+      if (isScrubbing()) return;   // 擦洗音起播：不进播放态，播放头由 seek 说了算
+      onPlayUI();
+    };
+    const onPause = () => {
+      // 擦洗中的暂停是跟随逻辑自己的节奏（等播放头追上来），别当成停止播放，
+      // 更不能把 t 改成 video.currentTime——播放头是跟着鼠标走的
+      if (isScrubbing()) return;
+      onPauseUI();
+    };
+    const onMeta = () => {
+      resetScrubWarned();   // 换了视频，擦洗音的提示重新算
+      if (!(isFinite(v.duration) && v.duration > 0)) return;
+      setDuration(v.duration);
+      fitStage();
+      relayout();
+      if (syncZoomRange()) saveLayout();   // 时长变了，全览这一档跟着变
+      if (smoke) {
+        window.desktop.reportPlaybackProbe({
+          ready: true, seeked: false, duration: v.duration, currentTime: v.currentTime,
+          width: v.videoWidth, height: v.videoHeight, error: "",
+        });
+        v.currentTime = Math.min(v.duration * .75, v.duration - .25);
+      }
+    };
+    const onSeeked = () => {
+      if (!smoke) return;
+      window.desktop.reportPlaybackProbe({
+        ready: true, seeked: true, duration: v.duration, currentTime: v.currentTime,
+        width: v.videoWidth, height: v.videoHeight, error: "",
+      });
+    };
+    const onError = () => {
+      if (!v.src) return;   // 还没挂视频，占位卡已经在管了
+      if (smoke) window.desktop.reportPlaybackProbe({
+        ready: false, seeked: false, duration: 0, currentTime: 0,
+        width: 0, height: 0, error: v.error?.message || "WebView2 video error",
+      });
+      // 本机文件播不出来多半不是文件缺失而是编码问题：Chromium 的 HEVC/H.265 依赖系统
+      // 解码器，Win11 要装 HEVC 视频扩展才行。此时缩略图正常（ffmpeg 截的）但 video 报错。
+      showVideoFallback(false, "视频无法播放——若是 HEVC/H.265 编码，需要系统解码器支持"
+        + "（Win11 可装「HEVC 视频扩展」），或先转码成 H.264。也可以改选其它文件：");
+    };
+
+    v.addEventListener("play", onPlay);
+    v.addEventListener("pause", onPause);
+    v.addEventListener("loadedmetadata", onMeta);
+    v.addEventListener("seeked", onSeeked);
+    v.addEventListener("error", onError);
+    return () => {
+      v.removeEventListener("play", onPlay);
+      v.removeEventListener("pause", onPause);
+      v.removeEventListener("loadedmetadata", onMeta);
+      v.removeEventListener("seeked", onSeeked);
+      v.removeEventListener("error", onError);
+    };
+  }, []);
+
+  const durHint = peaks?.duration ? `（时长约 ${fmt(peaks.duration)}）` : "";
+  const msg = vs.retrieving
+    ? (vs.retrievePct
+      ? `已取回 ${vs.retrievePct}，完成后自动开始播放。期间可以照常编辑字幕。`
+      : "取回后自动开始播放。期间可以照常编辑字幕。")
+    : (vs.fbMsg || "本地没有该视频，云端也未保留原视频。请选择本地原视频文件：");
+
+  return (
+    <div className="stage-wrap" ref={wrapRef}>
+      <div className="stage" ref={stageRef}
+        onClick={() => setPlaying(!playStore.get().playing)}>
+        <video id="video" ref={videoRef} playsInline preload="auto" src={vs.src || undefined} />
+        <div className="vid-cache" id="vid-cache" hidden={!vs.badge}>{vs.badge}</div>
+        <div className="vid-fallback" id="vid-fallback" hidden={!vs.fallbackOpen}>
+          <div className={"vf-card" + (vs.collapsed && !vs.retrieving ? " collapsed" : "")} id="vf-card">
+            <div className="vf-full">
+              <div className="vf-title" id="vf-title">{vs.retrieving ? "正在从云端取回视频" : "未加载视频"}</div>
+              <div className="vf-msg" id="vf-msg">
+                {msg}<br /><span className="vf-name">{title + durHint}</span>
+              </div>
+              <div className="vf-warn" id="vf-warn" hidden={vs.retrieving || !vs.warn}>{vs.warn}</div>
+              {/* 取回中没什么可选的，别给按钮 */}
+              <div className="vf-actions" id="vf-actions" hidden={vs.retrieving}>
+                <button className="vf-btn primary" id="vf-pick" type="button"
+                  onClick={() => void pickVideoFile()}>选择视频文件</button>
+                <button className="vf-btn" id="vf-use" type="button" hidden={!vs.usePath}
+                  onClick={() => { if (vs.usePath) void attachChosen(vs.usePath); }}>仍然使用</button>
+                <button className="vf-btn" id="vf-close" type="button"
+                  onClick={() => showVideoFallback(true)}>暂不加载</button>
+              </div>
+            </div>
+            <div className="vf-mini" id="vf-mini" onClick={() => showVideoFallback(false)}>
+              {vs.retrieving ? "正在从云端取回视频…" : "未加载视频 · 点击选择文件"}
+            </div>
+          </div>
+        </div>
+        <div className="sub-overlay" id="sub-overlay"><canvas id="sub-canvas" ref={canvasRef} /></div>
+        <div className="sub-busy" id="sub-busy" hidden={!vs.subBusy}>{vs.subBusy}</div>
+      </div>
+    </div>
+  );
+}

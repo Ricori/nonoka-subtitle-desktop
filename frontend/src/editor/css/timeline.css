@@ -1,0 +1,137 @@
+    /* ── 时间轴 ───────────────────────────── */
+    .timeline {
+      border-top: 1px solid var(--line);
+      background: var(--panel);
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .tl-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 12px;
+      border-bottom: 1px solid var(--line-soft);
+      position: relative;
+      /* 面包屑绝对居中，两侧按钮不能压到它身上 */
+      overflow: hidden;
+    }
+
+    .tl-toolbar .sep {
+      width: 1px;
+      height: 16px;
+      background: var(--line);
+    }
+
+    .tool {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 9px;
+      border-radius: 4px;
+      color: var(--mut);
+      font-size: 12px;
+    }
+
+    .tool:hover {
+      background: var(--raised);
+      color: var(--text);
+    }
+
+    .tool.on {
+      background: var(--raised);
+      color: var(--accent);
+    }
+
+    .tool svg {
+      display: block;
+    }
+
+    .tool.icon-only {
+      gap: 0;
+      padding: 5px;
+    }
+
+    #tool-snap {
+      margin-left: auto;
+    }
+
+    .zoom {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--faint);
+    }
+
+    .zoom input[type=range] {
+      width: 120px;
+      accent-color: var(--accent);
+    }
+
+    .tl-body {
+      display: flex;
+      position: relative;
+      height: 196px;
+    }
+
+    /* 纵向滚动条：贴右边，从时间刻度下方起（top 跟 --ruler-h 走），底边让开横向滚动条。
+       宽度与配色跟横向那条（scrollbar-width:thin + scrollbar-color:var(--line)）对齐；
+       平时隐身，鼠标进轨道区才淡入，拖动中（.show）不受鼠标是否还在区内影响 */
+    .vscroll {
+      position: absolute;
+      right: 0;
+      top: var(--ruler-h);
+      width: 10px;
+      z-index: 6;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .15s;
+    }
+
+    .tl-body:hover .vscroll,
+    .vscroll.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .vscroll[hidden] {
+      display: none;
+    }
+
+    .vthumb {
+      position: absolute;
+      left: 1px;
+      right: 1px;
+      border-radius: 3px;
+      background: var(--line);
+      cursor: default;
+    }
+
+    .vthumb:hover,
+    .vthumb.drag {
+      background: var(--faint);
+    }
+
+    /* 轨道行间拖拽手柄：只在最左标签栏处（宽度同 tl-labels），拖动改所在行高度 */
+    .row-resize {
+      position: absolute;
+      left: 0;
+      right: 0;
+      /* 挂在标签栏内，宽度自动跟随标签栏 */
+      height: 6px;
+      z-index: 6;
+      cursor: row-resize;
+    }
+
+    .row-resize:hover,
+    .row-resize.drag {
+      background: color-mix(in srgb, var(--accent) 30%, transparent);
+    }
+
+    /* 标签栏底部占位：与轨道区横向滚动条等高，保证标签与轨道对齐 */
+    .sb-gutter {
+      flex: none;
+    }
+

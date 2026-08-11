@@ -1,0 +1,83 @@
+    /* ── 切片标记：直接打在时间刻度上，不另占一条轨 ──────────
+       起止各一枚小黄标（可拖），中间一条细长条；条上双击进入切片。
+       只在完整片视图下出现——进了切片就没有「它在整片哪儿」这个问题了。 */
+    /* 标尺底部 22px 归时间刻度，切片标记一层层往上叠，每层 14px（top 由 JS 按层号给）。
+       单层时自上而下：切片条(1~4) → 切片名(4~14) → 时间标签(15~27) → 刻度(26~36) */
+    .clip-mark {
+      position: absolute;
+      height: 3px;
+      background: color-mix(in srgb, var(--clipmark) 55%, transparent);
+      border-radius: 2px;
+      cursor: pointer;
+      z-index: 2;
+    }
+
+    .clip-mark:hover {
+      background: var(--clipmark);
+    }
+
+    /* 切片名：小字挂在长条正下方，跟着条一起被裁 */
+    .clip-mark .nm {
+      position: absolute;
+      top: 3px;
+      left: 1px;
+      right: 1px;
+      font-size: 9px;
+      line-height: 10px;
+      color: var(--clipmark);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      pointer-events: none;
+    }
+
+    /* 起止标记：挂在条两端的小旗，下缘切个斜角指向自己那一侧 */
+    .clip-flag {
+      position: absolute;
+      width: 7px;
+      height: 8px;
+      background: var(--clipmark);
+      cursor: ew-resize;
+      z-index: 3;
+    }
+
+    .clip-flag.l {
+      border-radius: 2px 0 0 0;
+      clip-path: polygon(0 0, 100% 0, 100% 65%, 0 100%);
+    }
+
+    .clip-flag.r {
+      border-radius: 0 2px 0 0;
+      clip-path: polygon(0 0, 100% 0, 100% 100%, 0 65%);
+    }
+
+    .clip-flag:hover {
+      filter: brightness(1.2);
+    }
+
+    /* 悬浮详情：跟着鼠标走的小卡片，比 title 快也比 title 能装 */
+    .clip-tip {
+      position: fixed;
+      z-index: 62;
+      pointer-events: none;
+      padding: 5px 9px;
+      border-radius: 6px;
+      background: var(--raised);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow-pop);
+      font-size: 11px;
+      line-height: 1.6;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .clip-tip b {
+      color: var(--clipmark);
+      font-weight: 600;
+    }
+
+    .clip-tip span {
+      color: var(--faint);
+      font-variant-numeric: tabular-nums;
+    }
+

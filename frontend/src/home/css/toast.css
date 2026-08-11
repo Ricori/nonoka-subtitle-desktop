@@ -1,0 +1,34 @@
+#toast {
+  position: fixed;
+  left: 50%;
+  bottom: 34px;
+  transform: translateX(-50%);
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  pointer-events: none;
+}
+
+#toast div {
+  padding: 9px 20px;
+  background: var(--raised);
+  border: 1px solid var(--accent-line);
+  border-radius: 999px;
+  font-size: 13px;
+  box-shadow: var(--shadow-pop);
+  animation: pop .18s ease-out;
+}
+
+#toast div.bad {
+  border-color: color-mix(in srgb, var(--warn) 45%, transparent);
+  color: var(--warn);
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}

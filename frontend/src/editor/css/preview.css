@@ -1,0 +1,36 @@
+    /* ── 字幕预览：libass 本体（JASSUB/WASM）画到这张 canvas ──
+       宽高刻意不写死在标签上：JASSUB 只在「渲染尺寸 ≠ 当前 canvas 尺寸」时才会
+       把分辨率 uniform 传给 shader，初始尺寸恰好撞上就会整张画不出来。 */
+    .sub-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .sub-overlay canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* 渲染器要取 2 MB wasm + 几 MB 字体，冷缓存下得等一会儿，这期间字幕是空的——
+       给个明确的加载态，免得看着像字幕坏了。热缓存/本地读盘几乎瞬间就绪，
+       所以延迟一点再显示，不闪。 */
+    .sub-busy {
+      position: absolute;
+      right: 10px;
+      bottom: 10px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: rgba(10, 11, 14, .72);
+      border: 1px solid var(--line);
+      color: var(--mut);
+      font-size: 11.5px;
+      pointer-events: none;
+    }
+
+    .sub-busy[hidden] {
+      display: none;
+    }
+

@@ -1,0 +1,158 @@
+/* ── 空状态 / 拖放 ────────────────────────────────── */
+.empty {
+  grid-column: 1/-1;
+  margin: auto;
+  padding: 40px 64px 48px;
+  text-align: center;
+  color: var(--faint);
+  border: 2px dashed var(--accent-line);
+  border-radius: 24px;
+  cursor: pointer;
+  transition: border-color .15s, color .15s, background .15s;
+}
+
+.empty:hover {
+  border-color: var(--accent);
+  color: var(--mut);
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+}
+
+/* 空状态立绘 */
+.empty .mascot {
+  display: block;
+  width: 380px;
+  max-height: 220px;
+  object-fit: contain;
+  margin: 0 auto;
+  filter: drop-shadow(0 12px 26px rgba(0, 0, 0, .38));
+  transition: transform .18s cubic-bezier(.34, 1.56, .64, 1);
+  pointer-events: none;
+}
+
+.empty:hover .mascot {
+  transform: rotate(-2deg) translateY(-3px);
+}
+
+/* 对话气泡：立绘下方那句「把视频拖进来」，小三角朝上指向立绘 */
+.empty .bubble {
+  position: relative;
+  display: inline-block;
+  margin-top: 18px;
+  padding: 9px 20px;
+  background: var(--raised);
+  border: 1px solid var(--accent-line);
+  border-radius: 999px;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.empty .bubble::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  background: var(--raised);
+  border-left: 1px solid var(--accent-line);
+  border-top: 1px solid var(--accent-line);
+  transform: translateX(-50%) rotate(45deg);
+}
+
+/* 加载态复用 .empty 的盒子，但它不是可点的导入区：去掉虚线框和 hover 反馈 */
+.empty.loading {
+  cursor: default;
+  border-color: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.empty.loading:hover {
+  border-color: transparent;
+  color: var(--faint);
+  background: none;
+}
+
+.empty .big {
+  font-size: 40px;
+}
+
+.empty .t {
+  margin-top: 16px;
+  font-size: 15px;
+  color: var(--text);
+}
+
+.empty .s {
+  margin-top: 8px;
+  font-size: 13px;
+}
+
+#drop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: var(--drop-bg);
+}
+
+#drop.on,
+body[data-app="ready"].file-drop-target-active #drop,
+body[data-app="ready"] #drop.file-drop-target-active {
+  display: flex;
+}
+
+#opbusy {
+  position: fixed;
+  inset: 48px 0 0;
+  z-index: 65;
+  display: none;
+  place-items: start center;
+  padding-top: 18px;
+  background: rgba(0, 0, 0, .08);
+  cursor: progress;
+}
+
+#opbusy.on {
+  display: grid;
+}
+
+.opbusy-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--raised);
+  box-shadow: var(--shadow-pop);
+  color: var(--text);
+  font-size: 13px;
+}
+
+.opbusy-card .spin {
+  width: 16px;
+  height: 16px;
+  border-width: 2px;
+}
+
+.drop-card {
+  padding: 44px 72px;
+  border: 3px dashed var(--accent);
+  border-radius: 28px;
+  text-align: center;
+  color: var(--accent);
+  font-size: 20px;
+  font-weight: 600;
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+}
+
+.drop-card .drop-face {
+  font-size: 34px;
+  margin-bottom: 14px;
+}
+

@@ -1,0 +1,375 @@
+/* ── 弹窗 / toast ─────────────────────────────────── */
+.mask {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: var(--mask-bg);
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.mask.on {
+  display: flex;
+}
+
+/* 登录闸门是独立页面而非叠层：铺满不透明底色，背后不透出任何主界面内容。
+       同 #boot，这个状态下也没有 .topbar，靠自己顶着窗口拖动；卡片本体用
+       .modal 的 no-drag 摘出来，别让点输入框附近的空白位置也能拖窗口。 */
+.mask.gate {
+  z-index: 65;
+  background: var(--page-bg);
+  -webkit-app-region: drag;
+}
+
+/* 强制更新闸门：比登录闸门还高一层。一版已经被云端判定为不能再用，
+       key 验没验都不重要了，先把更新装上再说。装好后应用自己会重启。 */
+.mask.force {
+  z-index: 70;
+}
+
+.modal {
+  -webkit-app-region: no-drag;
+}
+
+.modal {
+  width: 480px;
+  max-height: 84vh;
+  overflow-y: auto;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 22px 24px;
+}
+
+.modal h2 {
+  margin: 0 0 16px;
+  font-size: 16px;
+}
+
+/* 比设置弹窗高一层：清理缓存的确认是从设置里弹出来的，不能被它压住 */
+.mask.ask-mask {
+  z-index: 55;
+}
+
+.modal.ask {
+  width: 400px;
+  padding: 24px 24px 18px;
+}
+
+.modal.ask #ask-text {
+  font-size: 13.5px;
+  line-height: 1.7;
+  white-space: pre-line;
+}
+
+.modal.ask #ask-field {
+  margin: 14px 0 4px;
+}
+
+/* 更新说明弹窗：装完更新后的首次启动弹一次，观感与确认框一致 */
+.modal.news {
+  width: 400px;
+  padding: 24px 24px 18px;
+}
+
+.modal.news #news-text {
+  font-size: 13.5px;
+  line-height: 1.7;
+  white-space: pre-line;
+}
+
+/* 强制更新本身没有按钮；同一卡片用于 FFmpeg 启动安装时，失败后会显示重试。 */
+.modal.upd {
+  width: 420px;
+  text-align: center;
+  padding: 36px 32px 30px;
+}
+
+.modal.upd .lead {
+  margin: 0 0 22px;
+  font-size: 12.5px;
+  color: var(--mut);
+  line-height: 1.6;
+}
+
+.upd-track {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.upd-fill {
+  height: 100%;
+  width: 0;
+  background: var(--grad);
+  border-radius: 999px;
+  transition: width .3s;
+}
+
+.upd-note {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--mut);
+}
+
+.modal.upd .btn {
+  margin-top: 18px;
+}
+
+.modal.login {
+  width: 420px;
+  text-align: center;
+  padding: 36px 32px 28px;
+}
+
+.modal.login h2 {
+  font-size: 20px;
+  letter-spacing: .4px;
+}
+
+.modal.login .lead {
+  margin: 0 0 22px;
+  font-size: 12.5px;
+  color: var(--mut);
+  line-height: 1.6;
+}
+
+.modal.login input {
+  text-align: center;
+}
+
+.modal.login .modal-foot .btn {
+  flex: 1;
+  padding: 9px 0;
+}
+
+.field {
+  margin-bottom: 15px;
+}
+
+.field label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 12.5px;
+  color: var(--mut);
+}
+
+.field input {
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  outline: none;
+  transition: border-color .13s, box-shadow .13s;
+}
+
+.field input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+.field .hint {
+  margin-top: 5px;
+  font-size: 11.5px;
+  color: var(--faint);
+}
+
+/* 勾选项：.field label 默认是块级说明文字，这里要复选框与文字同排 */
+.field label.chkline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 0;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.field label.chkline input {
+  width: auto;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+/* 只填 2~10 的人数框，不跟着 .field input 占满整个弹窗宽度 */
+#spk-num {
+  width: 120px;
+}
+
+/* 术语表下拉：与 .field input 同底同框，只把右侧下拉箭头补上（与 .sortsel 同款 SVG） */
+.field select {
+  width: 100%;
+  padding: 8px 32px 8px 12px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23a0aac8'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  transition: border-color .13s, box-shadow .13s;
+}
+
+body.light .field select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23767c96'/%3E%3C/svg%3E");
+}
+
+.field select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+/* 转写选项分板块：每块一个小标题；块间用一条细分隔线断开，视觉上归拢各自的字段 */
+.modal .sec+.sec {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.sec-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+/* 板块内最后一个字段不再往下留白，避免和分隔线之间空一大截 */
+.sec .field:last-child {
+  margin-bottom: 0;
+}
+
+/* 下拉 + 「查看」并排：下拉撑开，按钮定宽（.field select 默认 width:100% 在行内要改掉） */
+.row select {
+  flex: 1;
+  width: auto;
+}
+
+/* 自定义下拉伪类及菜单 */
+.fake-select {
+  flex: 1;
+  width: 100%;
+  padding: 8px 32px 8px 12px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+  text-align: left;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23a0aac8'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  transition: border-color .13s, box-shadow .13s;
+}
+
+body.light .fake-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23767c96'/%3E%3C/svg%3E");
+}
+
+.fake-select:focus,
+.fake-select.focus-ring {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+.sortsel.focus-ring {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+.custom-select-menu {
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.custom-select-menu::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-select-menu::-webkit-scrollbar-thumb {
+  background: var(--raised);
+  border-radius: 4px;
+}
+
+.custom-select-menu::-webkit-scrollbar-thumb:hover {
+  background: var(--line);
+}
+
+.custom-select-menu button {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 细滚动条 + 主题强调色：轨道透明，滑块用半透明强调色（亮/暗主题都跟着 --accent 走），
+  hover 时加深。上下留白让滑块不顶到圆角边 */
+.gm-list::-webkit-scrollbar,
+.gm-table-wrap::-webkit-scrollbar,
+.gm-csv::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.gm-list::-webkit-scrollbar-track,
+.gm-table-wrap::-webkit-scrollbar-track,
+.gm-csv::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.gm-list::-webkit-scrollbar-thumb,
+.gm-table-wrap::-webkit-scrollbar-thumb,
+.gm-csv::-webkit-scrollbar-thumb {
+  background: var(--accent-line);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.gm-list::-webkit-scrollbar-thumb:hover,
+.gm-table-wrap::-webkit-scrollbar-thumb:hover,
+.gm-csv::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-border);
+  background-clip: padding-box;
+}
+
+.field .hint.ok {
+  color: var(--ok);
+}
+
+.field .hint.bad {
+  color: var(--warn);
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.row input {
+  flex: 1;
+}
+
+.modal-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 20px;
+}
+

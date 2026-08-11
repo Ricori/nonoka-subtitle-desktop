@@ -1,0 +1,25 @@
+/* ── key 提示条 ───────────────────────────────────── */
+.keybar {
+  flex: 0 0 auto;
+  padding: 9px 20px;
+  background: var(--accent-dim);
+  border-bottom: 1px solid var(--accent-line);
+  color: var(--accent);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.keybar[hidden] {
+  display: none;
+}
+
+.keybar button {
+  background: none;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 3px 12px;
+  font-size: 12px;
+}
+

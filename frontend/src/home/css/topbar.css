@@ -1,0 +1,49 @@
+/* ── 顶栏 ─────────────────────────────────────────── */
+/* 窗口标题栏：整条可拖动，只有可交互元素设 no-drag。
+  高度必须与 main.js TITLEBAR_H（48px）一致，且与 editor 相同，否则两个页面互相跳转时标题栏会跳一下。
+  titlebar-area-x / titlebar-area-width 是 Window Controls Overlay 规范的标准环境变量，随窗口缩放/最大化实时更新：
+  - Windows：系统按钮在右上，titlebar-area-x 为 0，右侧 padding 让出按钮宽度；
+  - macOS：交通灯在左上，titlebar-area-x ≈ 交通灯右缘，左侧 padding 让开它。 */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-left: calc(env(titlebar-area-x, 0px) + 20px);
+  padding-right: calc(100% - env(titlebar-area-width, 100%) - env(titlebar-area-x, 0px) + 12px);
+  height: 48px;
+  flex: 0 0 auto;
+  background: var(--bg);
+  -webkit-app-region: drag;
+}
+
+/* 窗口标题栏菜单/卡片菜单开着时标题栏临时让出拖动区，好让点击标题栏也能正常关掉菜单 */
+body.menu-open .topbar {
+  -webkit-app-region: no-drag;
+}
+
+/* macOS 环境变量不可用时，仍为左上角交通灯保留空间。 */
+body.darwin .topbar {
+  padding-left: max(calc(env(titlebar-area-x, 72px) + 16px), 88px);
+}
+
+.topbar button,
+.topbar input {
+  -webkit-app-region: no-drag;
+}
+
+.brand {
+  font-weight: 600;
+  letter-spacing: .4px;
+  white-space: nowrap;
+}
+
+.brand small {
+  color: var(--faint);
+  font-weight: 400;
+  margin-left: 6px;
+}
+
+.spacer {
+  flex: 1;
+}
+

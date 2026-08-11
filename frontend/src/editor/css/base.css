@@ -1,0 +1,147 @@
+/* 桌面端只带 woff2，省安装包体积 */
+    @font-face {
+      font-family: '方正准圆_GBK';
+      src: local('方正准圆_GBK'),
+        local('FZ-ZhunYuan-GBK'),
+        url('./fonts/FZZhunYuan.woff2') format('woff2');
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: '荆南波波黑';
+      src: local('荆南波波黑'),
+        local('JingNanBoBoHei'),
+        url('./fonts/JingNanBoBoHei.woff2') format('woff2');
+      font-display: swap;
+    }
+
+    /* ── 双主题（与 index.html 同一套）─────────
+       · 暗色「星夜」：深蓝打底、瞳蓝做强调色，与主页暗色一致
+       强调蓝与 ja 轨道蓝同族，靠亮度和选中描边+辉光区分；
+       · 亮色「白丝带」：暖白打底，金发金做强调色，加深保证对比，ja/zh 同步加深。
+       主题选择与主页共用 localStorage 的 theme 键，跨窗口用 storage 事件同步。
+       标题栏颜色 = --panel（顶栏底色），main.js 默认暗色，亮色由 ui:set-overlay 覆盖。 */
+    :root {
+      color-scheme: dark;
+      --bg: #141725;
+      --panel: #1a1e30;
+      --raised: #242a3e;
+      --line: #2f374e;
+      --line-soft: #262d40;
+      --text: #e8ecf6;
+      --mut: #98a2bd;
+      --faint: #667092;
+      --accent: #8ea6f2;
+      --accent-dim: rgba(142, 166, 242, .14);
+      --on-accent: #1c2340;
+      --ja: #6487d6;
+      --zh: #43b3a0;
+      --warn: #e05b6e;
+      --ok: #4cc38a;
+      /* 切片标记：暖杏色。轨道蓝(ja)/青(zh)/强调蓝都在冷区，暖色一眼就分得开，
+         又比纯黄柔和，压得住深蓝底 */
+      --clipmark: #e8a86e;
+      --mask-bg: rgba(0, 0, 0, .55);
+      --vf-bg: rgba(10, 11, 16, .92);
+      --shadow-pop: 0 16px 48px rgba(0, 0, 0, .5);
+      --font-ui: '方正准圆_GBK', "Segoe UI Variable Text", "Segoe UI", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Meiryo", system-ui, sans-serif;
+      --font-mono: "Cascadia Code", Consolas, "SF Mono", ui-monospace, monospace;
+    }
+
+    body.light {
+      color-scheme: light;
+      --bg: #f6f1e2;
+      --panel: #fbf8ef;
+      --raised: #efe8d3;
+      --line: #ddd2b1;
+      --line-soft: #e7ddc5;
+      --text: #333a52;
+      --mut: #6f7590;
+      --faint: #9ba0b4;
+      --accent: #dfa32c;
+      --accent-dim: rgba(223, 163, 44, .15);
+      --on-accent: #4a3708;
+      --ja: #3f63c0;
+      --zh: #1f8a77;
+      --warn: #c43d50;
+      --ok: #2f9e5c;
+      /* 亮色下强调色本身就是金的，切片标记往赭红挪一档才不会和播放头糊在一起 */
+      --clipmark: #bf6438;
+      --mask-bg: rgba(70, 62, 40, .4);
+      --vf-bg: rgba(250, 246, 236, .94);
+      --shadow-pop: 0 16px 48px rgba(96, 80, 35, .25);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+    }
+
+    #root {
+      display: contents;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-ui);
+      font-size: 13px;
+      overflow: hidden;
+      /* 圆体只有单字重：禁止伪加粗，避免笔画机械加宽发糊 */
+      font-synthesis: none;
+      -webkit-font-smoothing: antialiased;
+      /* 编辑器整体禁止鼠标选中文字，避免拖拽轨道/点击列表时误选；输入框单独放开 */
+      user-select: none;
+    }
+
+    input,
+    textarea {
+      user-select: text;
+    }
+
+    button {
+      font-family: inherit;
+      font-size: inherit;
+      color: inherit;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    button:focus-visible,
+    input:focus-visible,
+    textarea:focus-visible,
+    [tabindex]:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+
+    .app {
+      height: 100vh;
+      display: grid;
+      /* 首行必须等于 .topbar 的实际高度（48px，与 main.js TITLEBAR_H 一致），
+         否则网格会把顶栏裁掉一截或在下面空出一条缝 */
+      grid-template-rows: 48px minmax(0, 1fr) 6px auto 26px;
+    }
+
+    .vsplit {
+      cursor: col-resize;
+    }
+
+    .hsplit {
+      cursor: row-resize;
+    }
+
+    .vsplit:hover,
+    .vsplit.drag,
+    .hsplit:hover,
+    .hsplit.drag {
+      background: color-mix(in srgb, var(--accent) 30%, transparent);
+    }
+

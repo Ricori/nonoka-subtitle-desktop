@@ -1,0 +1,301 @@
+    /* ── 右栏 ─────────────────────────────── */
+    .side {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      min-height: 0;
+      background: var(--panel);
+    }
+
+    .inspector {
+      border-bottom: 1px solid var(--line);
+      padding: 12px 14px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .insp-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .insp-head .label {
+      font-size: 10px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--faint);
+    }
+
+    .insp-head .idx {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      background: var(--accent-dim);
+      color: var(--accent);
+      border-radius: 3px;
+      padding: 2px 7px;
+    }
+
+    .insp-head .spacer {
+      flex: 1;
+    }
+
+    .insp-head .dur {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--mut);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .tc-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .tc-field {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .tc-field label {
+      font-size: 10px;
+      letter-spacing: .12em;
+      color: var(--faint);
+      text-transform: uppercase;
+    }
+
+    .tc-ctrl {
+      display: flex;
+      align-items: stretch;
+      background: var(--raised);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .tc-ctrl .val {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      font-variant-numeric: tabular-nums;
+      padding: 5px 0;
+    }
+
+    .tc-ctrl button {
+      width: 24px;
+      color: var(--faint);
+      font-size: 13px;
+      border-left: 1px solid var(--line-soft);
+      border-right: 1px solid var(--line-soft);
+    }
+
+    .tc-ctrl button:first-child {
+      border-left: none;
+    }
+
+    .tc-ctrl button:last-child {
+      border-right: none;
+    }
+
+    .tc-ctrl button:hover {
+      color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 7%, transparent);
+    }
+
+    .textfield {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .textfield label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+      letter-spacing: .12em;
+      color: var(--faint);
+      text-transform: uppercase;
+    }
+
+    .textfield label i {
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+      display: inline-block;
+    }
+
+    .textfield.lang-ja label i {
+      background: var(--ja);
+    }
+
+    .textfield.lang-zh label i {
+      background: var(--zh);
+    }
+
+    .textfield textarea {
+      resize: none;
+      background: var(--raised);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: var(--font-ui);
+      font-size: 13.5px;
+      line-height: 1.5;
+      padding: 7px 9px;
+      height: 57px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--line) transparent;
+    }
+
+    .textfield textarea:focus {
+      border-color: var(--faint);
+      outline: none;
+    }
+
+    .insp-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .insp-actions .btn {
+      font-size: 12px;
+      padding: 4px 10px;
+    }
+
+    .btn.danger {
+      color: var(--warn);
+      border-color: color-mix(in srgb, var(--warn) 35%, transparent);
+    }
+
+    .btn.danger:hover {
+      border-color: var(--warn);
+      background: color-mix(in srgb, var(--warn) 10%, transparent);
+    }
+
+    /* 字幕列表 */
+    .seg-list {
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--line) transparent;
+    }
+
+    .list-head {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--line-soft);
+      font-size: 10px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--faint);
+    }
+
+    .list-head .count {
+      margin-left: auto;
+      font-family: var(--font-mono);
+      letter-spacing: 0;
+    }
+
+    /* 列表头轨道切换器 */
+    .list-head select {
+      background: var(--raised);
+      border: 1px solid var(--line);
+      color: var(--text);
+      font: inherit;
+      font-size: 11px;
+      border-radius: 4px;
+      padding: 2px 6px;
+      max-width: 58%;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 30px 74px minmax(0, 1fr);
+      gap: 4px 10px;
+      padding: 8px 14px 9px;
+      border-bottom: 1px solid var(--line-soft);
+      border-left: 2px solid transparent;
+      cursor: pointer;
+    }
+
+    .row:hover {
+      background: color-mix(in srgb, var(--text) 3%, transparent);
+    }
+
+    .row.active {
+      background: var(--accent-dim);
+      border-left-color: var(--accent);
+    }
+
+    .row .idx {
+      grid-row: span 2;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--faint);
+      padding-top: 2px;
+    }
+
+    .row .tc {
+      grid-row: span 2;
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      color: var(--mut);
+      font-variant-numeric: tabular-nums;
+      line-height: 1.7;
+      padding-top: 1px;
+    }
+
+    .row .tc .out {
+      color: var(--faint);
+    }
+
+    .row .ja {
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .row .zh {
+      font-size: 12px;
+      line-height: 1.4;
+      color: var(--mut);
+    }
+
+    /* 选中行底色是 accent-dim（金），译文的灰色在上面会发脏，向金色靠一点 */
+    .row.active .zh {
+      color: color-mix(in srgb, var(--accent) 30%, var(--text));
+    }
+
+    .row .flags {
+      grid-column: 3;
+      display: flex;
+      gap: 5px;
+      margin-top: 2px;
+    }
+
+    .flag {
+      font-size: 9.5px;
+      font-family: var(--font-mono);
+      padding: 1px 6px;
+      border-radius: 3px;
+      background: color-mix(in srgb, var(--warn) 12%, transparent);
+      color: var(--warn);
+    }
+
+    .flag.lc {
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+

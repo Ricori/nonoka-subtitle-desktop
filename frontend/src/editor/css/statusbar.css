@@ -1,0 +1,34 @@
+    /* ── 状态栏 ───────────────────────────── */
+    .statusbar {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      padding: 0 14px;
+      background: var(--panel);
+      border-top: 1px solid var(--line);
+      font-size: 11px;
+      color: var(--faint);
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .statusbar kbd {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      background: var(--raised);
+      border: 1px solid var(--line);
+      border-radius: 3px;
+      padding: 0 5px;
+      margin-right: 3px;
+      color: var(--mut);
+    }
+
+    .statusbar .spacer {
+      flex: 1;
+    }
+
+    .statusbar .stats {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+    }
+

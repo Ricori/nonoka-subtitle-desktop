@@ -1,0 +1,38 @@
+    /* 加载/错误遮罩 */
+    .boot {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      color: var(--mut);
+      font-size: 13.5px;
+      /* 加载期间盖住了整条顶栏，窗口拖动/双击最大化得靠它自己顶着；
+         链接是唯一的交互元素，单独摘出来 */
+      -webkit-app-region: drag;
+    }
+
+    .boot .spin {
+      width: 26px;
+      height: 26px;
+      border: 3px solid var(--line);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: bootspin .8s linear infinite;
+    }
+
+    @keyframes bootspin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .boot .spin {
+        animation-duration: 2.4s;
+      }
+    }

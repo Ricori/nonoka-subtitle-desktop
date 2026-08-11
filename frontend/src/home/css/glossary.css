@@ -1,0 +1,271 @@
+/* ── 专业术语表管理 ─────────────────────────────────────
+       两个入口：顶栏菜单，以及转写选项里术语表下拉旁的「编辑」。左侧一栏选表，右侧
+       「表格 / CSV」两个视图编辑同一份内容：表格适合改一两条，CSV 适合从别处整份粘
+       进来。改与不改由服务端下发的 can_edit 决定（只有创建者和管理员能改），只读时
+       整块灰掉、保存/删除按钮直接不给。 */
+
+/* 从转写选项里叫出来时要盖住它（.mask 默认 50），但得让确认框（.ask-mask 55）
+       压在自己上面——关窗前那句「有未保存的修改」不能被自己挡住 */
+.mask.gm-mask {
+  z-index: 54;
+}
+
+.modal.gm {
+  width: 940px;
+  max-width: 94vw;
+}
+
+.gm-wrap {
+  display: flex;
+  gap: 14px;
+  height: 62vh;
+  min-height: 340px;
+}
+
+.gm-side {
+  flex: 0 0 186px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+
+.gm-list {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-right: 2px;
+}
+
+.gm-item {
+  width: 100%;
+  padding: 8px 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 12.5px;
+  text-align: left;
+}
+
+.gm-item:hover {
+  background: var(--raised);
+}
+
+.gm-item.on {
+  background: var(--accent-dim);
+  border-color: var(--accent-line);
+  color: var(--accent);
+}
+
+.gm-item .n {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.gm-item .m {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  color: var(--faint);
+}
+
+.gm-item.on .m {
+  color: color-mix(in srgb, var(--accent) 72%, transparent);
+}
+
+.gm-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* 右侧编辑区与占位互斥显示，两者的 display:flex 会盖过 hidden 属性的 UA 样式 */
+.gm-main[hidden],
+.gm-blank[hidden] {
+  display: none;
+}
+
+.gm-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gm-name {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 12px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+  transition: border-color .13s, box-shadow .13s;
+}
+
+.gm-name:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+/* 只读态：名字框和单元格都灰下去，一眼看出这套表不归自己改 */
+.gm-name:disabled,
+.gm-tb input:disabled {
+  color: var(--mut);
+  cursor: default;
+}
+
+.gm-tag {
+  flex: 0 0 auto;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--raised);
+  border: 1px solid var(--line);
+  color: var(--mut);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.gm-tag.mine {
+  background: var(--accent-dim);
+  border-color: var(--accent-line);
+  color: var(--accent);
+}
+
+.gm-table-wrap {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  border: 1px solid var(--line-soft);
+  border-radius: 12px;
+  background: var(--bg);
+}
+
+.gm-tb {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 12px;
+}
+
+.gm-tb thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 7px 9px;
+  background: var(--raised);
+  color: var(--mut);
+  font-weight: 600;
+  font-size: 11px;
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--line);
+}
+
+.gm-tb td {
+  padding: 1px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+/* 单元格输入框平时不画边框（六列全画满屏都是框），hover/聚焦才浮出来 */
+.gm-tb input {
+  width: 100%;
+  padding: 6px 7px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 12px;
+  outline: none;
+}
+
+.gm-tb input:hover:not(:disabled) {
+  border-color: var(--line);
+}
+
+.gm-tb input:focus {
+  background: var(--panel);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-dim);
+}
+
+.gm-tb .x {
+  width: 24px;
+  height: 24px;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  color: var(--faint);
+  font-size: 13px;
+  line-height: 1;
+}
+
+.gm-tb .x:hover {
+  background: color-mix(in srgb, var(--warn) 16%, transparent);
+  color: var(--warn);
+}
+
+.gm-csv {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  padding: 12px 14px;
+  resize: none;
+  background: var(--bg);
+  border: 1px solid var(--line-soft);
+  border-radius: 12px;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.75;
+  outline: none;
+}
+
+.gm-csv:focus {
+  border-color: var(--accent);
+}
+
+.gm-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gm-foot .sp {
+  flex: 1;
+}
+
+.gm-note {
+  font-size: 11.5px;
+  color: var(--faint);
+}
+
+/* 一套表都没有 / 没选中时右侧的占位 */
+.gm-blank {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--faint);
+  font-size: 13px;
+  text-align: center;
+  line-height: 1.7;
+}
+
+.gm-blank .big {
+  font-size: 26px;
+}
+

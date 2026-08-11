@@ -1,0 +1,54 @@
+    /* ── 时间轴工具栏正中的切片面包屑（参考剪映）────────────
+       绝对定位保证真的居中，不受左右两侧按钮宽度影响。 */
+    .crumb {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      font-size: 12px;
+      color: var(--mut);
+    }
+
+    /* display 得压过 [hidden] 的 UA 规则，否则返回键在完整片上也一直露着 */
+    .crumb button[hidden] {
+      display: none;
+    }
+
+    .crumb button {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      max-width: 240px;
+      padding: 3px 9px;
+      border: 0;
+      border-radius: 4px;
+      background: none;
+      color: inherit;
+      font: inherit;
+      font-family: var(--font-ui);
+      cursor: pointer;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .crumb button:hover {
+      background: var(--raised);
+      color: var(--text);
+    }
+
+    .crumb .back {
+      padding: 3px 6px;
+      color: var(--faint);
+    }
+
+    .crumb .cur {
+      color: var(--text);
+    }
+
+    .crumb .cur.on-clip {
+      color: var(--clipmark);
+    }
+
