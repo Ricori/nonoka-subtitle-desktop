@@ -177,6 +177,15 @@ export function TouchCache(id: string): $CancellablePromise<boolean> {
     return $Call.ByID(2069348169, id);
 }
 
+/**
+ * *
+ *  * 转码兜底：HEVC/H.265、AV1、10bit 这些 Chromium 得靠系统解码器才放得出来，缺了就只有
+ *  * 报错。转成 H.264/AAC 覆盖缓存副本（<id>.mp4），解析链下次照旧命中缓存直接播。
+ */
+export function TranscodeToH264(id: string): $CancellablePromise<$models.TranscodeResult> {
+    return $Call.ByID(733595536, id);
+}
+
 export function UploadFile(id: string, filePath: string, putURL: string, headers: { [_ in string]?: string } | null): $CancellablePromise<$models.UploadResult> {
     return $Call.ByID(3444769141, id, filePath, putURL, headers);
 }

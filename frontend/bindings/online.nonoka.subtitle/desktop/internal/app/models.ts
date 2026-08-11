@@ -171,6 +171,11 @@ export interface ThumbReady {
     "path": string;
 }
 
+export interface TranscodeResult {
+    "ok": boolean;
+    "url": string;
+}
+
 export interface UpdateStatus {
     "mandatory": boolean;
     "version": string;

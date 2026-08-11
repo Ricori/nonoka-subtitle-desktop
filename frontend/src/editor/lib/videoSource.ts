@@ -34,8 +34,37 @@ export function showRetrieving(pctText = "") {
 export function showVideoFallback(collapsed: boolean, msgText?: string) {
   videoStore.set({
     retrieving: false, collapsed, fallbackOpen: true, warn: "", usePath: null,
-    ...(msgText != null ? { fbMsg: msgText } : {}),
+    // 只有换文案（= 换了一种失败原因）才重置转码按钮，纯折叠/展开不动它
+    ...(msgText != null ? { fbMsg: msgText, canTranscode: false } : {}),
   });
+}
+
+/** 文件在、但 <video> 解不了：唯一还能自救的路是转码，占位卡上多给一个按钮 */
+export function showPlaybackError(msgText: string) {
+  showVideoFallback(false, msgText);
+  videoStore.set({ canTranscode: true });
+}
+
+/** 转码成 H.264 存进缓存，完成后直接挂新副本（URL 每次都不同，不吃浏览器缓存） */
+export async function transcodeToH264() {
+  videoStore.set({
+    transcoding: true, transcodePct: "", warn: "", usePath: null,
+    fallbackOpen: true, collapsed: false,
+  });
+  try {
+    const r = await window.desktop.transcodeToH264(getVid());
+    videoStore.set({ transcoding: false, canTranscode: false, badge: null });
+    mountVideo(r.url);
+    toast("转码完成，已存入缓存目录");
+  } catch (e) {
+    const msg = errText(e);
+    videoStore.set({ transcoding: false, transcodePct: "", badge: null });
+    if (!msg.includes("已取消")) toast("转码失败：" + msg, true);
+  }
+}
+
+export function cancelTranscode() {
+  void window.desktop.cancelPipeline(getVid());
 }
 
 export async function setupVideo() {

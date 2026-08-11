@@ -170,6 +170,7 @@ export const desktopBridge = {
   pickAndValidateVideo: (id: string, expect: { fp?: string; duration?: number } = {}) =>
     DesktopService.PickAndValidateVideo(id, { fp: expect.fp ?? "", duration: expect.duration ?? 0 }),
   attachLocalVideo: DesktopService.AttachLocalVideo,
+  transcodeToH264: DesktopService.TranscodeToH264,
   getClips: async (id: string) => (await DesktopService.GetClips(id)) ?? [],
   setClips: DesktopService.SetClips,
   fileExists: DesktopService.PathExists,

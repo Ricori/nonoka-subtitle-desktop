@@ -2,7 +2,9 @@ import { useEffect, useLayoutEffect, useRef } from 'react';
 import { shallowEqual } from '../../home/lib/createStore';
 import { setSubCanvasEl, setVideoEl } from '../lib/media';
 import { onPauseUI, onPlayUI, resetScrubWarned, setPlaying, isScrubbing } from '../lib/playback';
-import { attachChosen, pickVideoFile, showVideoFallback } from '../lib/videoSource';
+import {
+  attachChosen, cancelTranscode, pickVideoFile, showPlaybackError, showVideoFallback, transcodeToH264,
+} from '../lib/videoSource';
 import { isSmokeMode } from '../session';
 import { docStore } from '../store/docStore';
 import { saveLayout } from '../store/layoutStore';
@@ -89,8 +91,8 @@ export function VideoStage() {
       });
       // 本机文件播不出来多半不是文件缺失而是编码问题：Chromium 的 HEVC/H.265 依赖系统
       // 解码器，Win11 要装 HEVC 视频扩展才行。此时缩略图正常（ffmpeg 截的）但 video 报错。
-      showVideoFallback(false, "视频无法播放——若是 HEVC/H.265 编码，需要系统解码器支持"
-        + "（Win11 可装「HEVC 视频扩展」），或先转码成 H.264。也可以改选其它文件：");
+      showPlaybackError("视频无法播放——若是 HEVC/H.265 编码，需要系统解码器支持"
+        + "（Win11 可装「HEVC 视频扩展」）。也可以一键转码成 H.264，或改选其它文件：");
     };
 
     v.addEventListener("play", onPlay);
@@ -108,11 +110,15 @@ export function VideoStage() {
   }, []);
 
   const durHint = peaks?.duration ? `（时长约 ${fmt(peaks.duration)}）` : "";
-  const msg = vs.retrieving
-    ? (vs.retrievePct
-      ? `已取回 ${vs.retrievePct}，完成后自动开始播放。期间可以照常编辑字幕。`
-      : "取回后自动开始播放。期间可以照常编辑字幕。")
-    : (vs.fbMsg || "本地没有该视频，云端也未保留原视频。请选择本地原视频文件：");
+  const busyMsg = (pct: string, done: string) =>
+    (pct ? `${done} ${pct}，` : "") + "完成后自动开始播放。期间可以照常编辑字幕。";
+  const msg = vs.transcoding
+    ? busyMsg(vs.transcodePct, "已转码") + "转好的 H.264 副本存入缓存目录。"
+    : vs.retrieving
+      ? busyMsg(vs.retrievePct, "已取回")
+      : (vs.fbMsg || "本地没有该视频，云端也未保留原视频。请选择本地原视频文件：");
+  const cardTitle = vs.transcoding ? "正在转码成 H.264"
+    : vs.retrieving ? "正在从云端取回视频" : "未加载视频";
 
   return (
     <div className="stage-wrap" ref={wrapRef}>
@@ -121,21 +127,28 @@ export function VideoStage() {
         <video id="video" ref={videoRef} playsInline preload="auto" src={vs.src || undefined} />
         <div className="vid-cache" id="vid-cache" hidden={!vs.badge}>{vs.badge}</div>
         <div className="vid-fallback" id="vid-fallback" hidden={!vs.fallbackOpen}>
-          <div className={"vf-card" + (vs.collapsed && !vs.retrieving ? " collapsed" : "")} id="vf-card">
+          <div className={"vf-card" + (vs.collapsed && !vs.retrieving && !vs.transcoding ? " collapsed" : "")} id="vf-card">
             <div className="vf-full">
-              <div className="vf-title" id="vf-title">{vs.retrieving ? "正在从云端取回视频" : "未加载视频"}</div>
+              <div className="vf-title" id="vf-title">{cardTitle}</div>
               <div className="vf-msg" id="vf-msg">
                 {msg}<br /><span className="vf-name">{title + durHint}</span>
               </div>
-              <div className="vf-warn" id="vf-warn" hidden={vs.retrieving || !vs.warn}>{vs.warn}</div>
-              {/* 取回中没什么可选的，别给按钮 */}
+              <div className="vf-warn" id="vf-warn" hidden={vs.retrieving || vs.transcoding || !vs.warn}>{vs.warn}</div>
+              {/* 取回中没什么可选的，别给按钮；转码中只留取消 */}
               <div className="vf-actions" id="vf-actions" hidden={vs.retrieving}>
-                <button className="vf-btn primary" id="vf-pick" type="button"
-                  onClick={() => void pickVideoFile()}>选择视频文件</button>
-                <button className="vf-btn" id="vf-use" type="button" hidden={!vs.usePath}
-                  onClick={() => { if (vs.usePath) void attachChosen(vs.usePath); }}>仍然使用</button>
-                <button className="vf-btn" id="vf-close" type="button"
-                  onClick={() => showVideoFallback(true)}>暂不加载</button>
+                {vs.transcoding ? (
+                  <button className="vf-btn" id="vf-tc-cancel" type="button"
+                    onClick={cancelTranscode}>取消转码</button>
+                ) : (<>
+                  <button className="vf-btn primary" id="vf-transcode" type="button" hidden={!vs.canTranscode}
+                    onClick={() => void transcodeToH264()}>转码成 H.264</button>
+                  <button className={"vf-btn" + (vs.canTranscode ? "" : " primary")} id="vf-pick" type="button"
+                    onClick={() => void pickVideoFile()}>选择视频文件</button>
+                  <button className="vf-btn" id="vf-use" type="button" hidden={!vs.usePath}
+                    onClick={() => { if (vs.usePath) void attachChosen(vs.usePath); }}>仍然使用</button>
+                  <button className="vf-btn" id="vf-close" type="button"
+                    onClick={() => showVideoFallback(true)}>暂不加载</button>
+                </>)}
               </div>
             </div>
             <div className="vf-mini" id="vf-mini" onClick={() => showVideoFallback(false)}>

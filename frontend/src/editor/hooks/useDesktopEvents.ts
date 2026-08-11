@@ -6,7 +6,7 @@ import { getVid, isLeaving, reportBootError } from '../session';
 import { expJob, exportStore } from '../store/exportStore';
 import { clipsDirty, saveStore, startAutosave } from '../store/saveStore';
 import { videoStore } from '../store/videoStore';
-import { fmtMB } from '../utils';
+import { fmt, fmtMB } from '../utils';
 
 const pctOf = (p: { done?: number; total?: number }) =>
   p.total ? Math.round((p.done || 0) / p.total * 100) : 0;
@@ -63,6 +63,12 @@ export function useDesktopEvents() {
       if (p.stage === "download") {
         videoStore.set({ badge: `从云端取回 ${pctOf(p)}%` });
         if (videoStore.get().retrieving) showRetrieving(`${pctOf(p)}%（${fmtMB(p.done)} / ${fmtMB(p.total)}）`);
+      } else if (p.stage === "transcode") {
+        // done/total 是秒数，不是字节
+        videoStore.set({
+          badge: `转码 ${pctOf(p)}%`,
+          transcodePct: `${pctOf(p)}%（${fmt(p.done)} / ${fmt(p.total)}）`,
+        });
       } else if (p.stage === "copy" && !videoStore.get().src) {
         videoStore.set({ badge: `复制到缓存 ${pctOf(p)}%` });
       }

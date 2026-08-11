@@ -32,6 +32,7 @@ export type {
     RuntimeInfo,
     SwitchMetric,
     ThumbReady,
+    TranscodeResult,
     UpdateStatus,
     UploadResult,
     VideoAttachResult,
