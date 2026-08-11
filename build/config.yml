@@ -11,7 +11,7 @@ info:
   description: "Nonoka Subtitle"
   copyright: "© 2026 Takamichika"
   comments: "A local video subtitle editor."
-  version: "0.6.3"
+  version: "0.6.4"
   cfBundleIconName: "appicon"
 
 # Dev mode configuration

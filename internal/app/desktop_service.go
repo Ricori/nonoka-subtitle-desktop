@@ -25,7 +25,7 @@ const maxVideoDuration = 2 * 60 * 60
 
 const (
 	backendBase    = "https://ricori--ytapi.modal.run"
-	desktopVersion = "0.6.3"
+	desktopVersion = "0.6.4"
 )
 
 type AppConfig struct {
