@@ -33,7 +33,7 @@ Set-VersionInFile "internal\app\desktop_service.go" '(?m)(desktopVersion\s*=\s*"
 Set-VersionInFile "frontend\package.json" '(?m)^(  "version": ")[^"]+("\s*,?\s*$)' "`${1}$Version`${2}"
 Set-VersionInFile "frontend\package-lock.json" '(?m)^(  "version": ")[^"]+("\s*,?\s*$)' "`${1}$Version`${2}"
 Set-VersionInFile "frontend\package-lock.json" '("":\s*\{\s*"name":\s*"[^"]+",\s*"version":\s*")[^"]+(")' "`${1}$Version`${2}"
-Set-VersionInFile "build\config.yml" '(?m)^  version: "[^"]+"$' "  version: `"$Version`""
+Set-VersionInFile "build\config.yml" '(?m)^  version: "[^"]+"\r?$' "  version: `"$Version`""
 Set-VersionInFile "build\windows\info.json" '("(?:file_version|product_version|ProductVersion)"\s*:\s*")[^"]+(")' "`${1}$Version`${2}" 5
 Set-VersionInFile "build\windows\wails.exe.manifest" '(<assemblyIdentity\s+type="win32"\s+name="online\.nonoka\.subtitle"\s+version=")[^"]+(")' "`${1}$Version`${2}"
 Set-VersionInFile "build\windows\msix\app_manifest.xml" '(?m)(^\s*Version=")[^"]+"[ \t]*(\r?$)' "`${1}$Version.0`"`${2}"
