@@ -4,6 +4,7 @@ param(
     [ValidateSet("amd64", "arm64")][string]$Arch = "amd64",
     [ValidatePattern('^$|^\d+\.\d+\.\d+$')][string]$MinVersion = "",
     [string]$NotesFile = "docs/RELEASE_NOTES.md",
+    [switch]$VersionOnly,
     [switch]$SkipBuild,
     [switch]$Publish
 )
@@ -41,6 +42,12 @@ Set-VersionInFile "build\windows\msix\template.xml" '(?m)(^\s*Version=")[^"]+(")
 Set-VersionInFile "build\windows\nsis\wails_tools.nsh" '(?m)(^\s*!define INFO_PRODUCTVERSION ")[^"]+("\s*$)' "`${1}$Version`${2}"
 Set-VersionInFile "build\darwin\Info.plist" '(<key>CFBundle(?:ShortVersionString|Version)</key>\s*<string>)[^<]+(</string>)' "`${1}$Version`${2}" 2
 Set-VersionInFile "build\darwin\Info.dev.plist" '(<key>CFBundle(?:ShortVersionString|Version)</key>\s*<string>)[^<]+(</string>)' "`${1}$Version`${2}" 2
+
+# 只同步版本号：交给 GitHub Actions 构建时用这个
+if ($VersionOnly) {
+    Write-Host "Version synced to $Version"
+    return
+}
 
 if (-not $SkipBuild) {
     $wails = "D:\Envir\go\bin\wails3.exe"

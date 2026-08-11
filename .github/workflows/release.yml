@@ -1,0 +1,180 @@
+name: Release
+
+# 版本号（build/config.yml 的 info.version）变更时自动编译并发布 Release
+on:
+  push:
+    branches: [main]
+    paths:
+      - "build/config.yml"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "已存在同版本 Release 时也重新构建（会覆盖）"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  WAILS_VERSION: v3.0.0-alpha2.119
+  NODE_VERSION: "22"
+
+jobs:
+  check:
+    name: Check version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.check.outputs.version }}
+      release: ${{ steps.check.outputs.release }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FORCE: ${{ github.event.inputs.force }}
+        run: |
+          version=$(sed -nE 's/^[[:space:]]+version:[[:space:]]*"([0-9]+\.[0-9]+\.[0-9]+)".*/\1/p' build/config.yml | head -1)
+          if [ -z "$version" ]; then
+            echo "::error::未能从 build/config.yml 解析出 info.version"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if [ "$FORCE" != "true" ] && gh release view "v$version" >/dev/null 2>&1; then
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::v$version 已发布，跳过本次构建"
+          else
+            echo "release=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::准备构建 v$version"
+          fi
+
+  build:
+    name: Build ${{ matrix.target }}
+    needs: check
+    if: needs.check.outputs.release == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: windows
+            os: windows-latest
+          - target: darwin
+            os: macos-latest
+    runs-on: ${{ matrix.os }}
+    env:
+      VERSION: ${{ needs.check.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install wails3
+        shell: bash
+        run: |
+          go install github.com/wailsapp/wails/v3/cmd/wails3@${WAILS_VERSION}
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+
+      # windows-latest 镜像通常自带 NSIS，缺失时才安装
+      - name: Ensure NSIS
+        if: matrix.target == 'windows'
+        shell: pwsh
+        run: |
+          if (-not (Get-Command makensis -ErrorAction SilentlyContinue)) {
+            choco install nsis -y --no-progress
+            "C:\Program Files (x86)\NSIS" | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+          }
+
+      - name: Build Windows (amd64 + NSIS installer)
+        if: matrix.target == 'windows'
+        shell: pwsh
+        run: wails3 task windows:package ARCH=amd64
+
+      - name: Build macOS (universal .app)
+        if: matrix.target == 'darwin'
+        run: wails3 task darwin:package:universal
+
+      - name: Collect Windows artifacts
+        if: matrix.target == 'windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Copy-Item "bin/Nonoka Subtitle.exe" "dist/Nonoka-Subtitle-$env:VERSION-windows-amd64.exe"
+          $installer = Get-ChildItem "bin/*-amd64-installer.exe" | Select-Object -First 1
+          if (-not $installer) { throw "未找到 NSIS 安装包" }
+          Copy-Item $installer.FullName "dist/Nonoka-Subtitle-$env:VERSION-windows-amd64-installer.exe"
+
+      - name: Collect macOS artifacts
+        if: matrix.target == 'darwin'
+        run: |
+          mkdir -p dist
+          # ditto 保留 .app 的可执行权限与符号链接，普通 zip 会破坏 bundle
+          ditto -c -k --keepParent "bin/Nonoka Subtitle.app" \
+            "dist/Nonoka-Subtitle-$VERSION-darwin-universal.zip"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.target }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 7
+
+  release:
+    name: Publish release
+    needs: [check, build]
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.check.outputs.version }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      # 取 CHANGELOG.md 里对应版本的小节作为发布说明
+      - name: Extract release notes
+        id: notes
+        run: |
+          awk -v v="$VERSION" '
+            /^## / {
+              if (found) exit
+              h = $2; sub(/\r$/, "", h)
+              if (h == v) found = 1
+              next
+            }
+            found { print }
+          ' CHANGELOG.md > notes.md
+          # 该版本没写日志时，退回按提交记录自动生成
+          if grep -q '[^[:space:]]' notes.md; then
+            echo "manual=true" >> "$GITHUB_OUTPUT"
+          fi
+          printf '\n---\nmacOS 版本未做签名与公证，首次打开需右键 → 打开。\n' >> notes.md
+
+      - name: Create or update release
+        run: |
+          if gh release view "v$VERSION" >/dev/null 2>&1; then
+            gh release upload "v$VERSION" dist/* --clobber
+            exit 0
+          fi
+          generate=--generate-notes
+          if [ "${{ steps.notes.outputs.manual }}" = "true" ]; then generate=""; fi
+          gh release create "v$VERSION" dist/* \
+            --target "$GITHUB_SHA" \
+            --title "Nonoka Subtitle $VERSION" \
+            --notes-file notes.md $generate
