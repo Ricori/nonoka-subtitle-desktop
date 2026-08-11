@@ -49,15 +49,25 @@ export function styleRgb(name: string | null, fallback: string): string {
 }
 
 // ── 缺字检测 ──────────────────────────────────────────────
-// 随包只带了方正准圆，模板里引用的其它字体得靠系统装了同名的。
+// 随包字体之外，模板里引用的字体得靠系统装了同名的。
 // document.fonts.check() 对本地字体不可靠，用经典的 canvas 宽度比对法：
 // 拿目标字体和一个必然不存在的族名量同一串字，宽度不同就说明目标字体真被用上了。
-export function fontMissing(name: string): boolean {
-  if (BUNDLED_FONTS.some(f => f.toLowerCase() === name.toLowerCase())) return false;
+const PROBE = "汉字AWMil測試0123";
+const BOGUS = '"__nonoka_no_such_font__"';
+const cssFam = (n: string) => `"${n.replace(/["\\]/g, "\\$&")}"`;
+
+/**
+ * 批量查缺字。必须是异步的：@font-face 声明的字体是懒加载的，
+ * 没先 load 一遍就量宽，量到的是回退字体，会把装着的字体误报成缺失。
+ */
+export async function fontsMissing(names: string[]): Promise<string[]> {
+  const list = names.filter(n => n && !BUNDLED_FONTS.some(f => f.toLowerCase() === n.toLowerCase()));
+  if (!list.length) return [];
+  await Promise.all(list.map(n => document.fonts.load(`40px ${cssFam(n)}`, PROBE).catch(() => {})));
+  await document.fonts.ready;
   const cv = document.createElement("canvas").getContext("2d");
-  if (!cv) return false;
-  const probe = "汉字AWMil測試0123";
-  const base = (f: string) => { cv.font = `40px ${f}`; return cv.measureText(probe).width; };
-  const bogus = base('"__nonoka_no_such_font__"');
-  return base(`"${name}", "__nonoka_no_such_font__"`) === bogus;
+  if (!cv) return [];
+  const width = (f: string) => { cv.font = `40px ${f}`; return cv.measureText(PROBE).width; };
+  const bogus = width(BOGUS);
+  return list.filter(n => width(`${cssFam(n)}, ${BOGUS}`) === bogus);
 }

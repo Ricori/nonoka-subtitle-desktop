@@ -64,8 +64,9 @@ export const ASS_FMT_DEFAULT = ("Name,Fontname,Fontsize,PrimaryColour,SecondaryC
   + "BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,"
   + "Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding").toLowerCase().split(",");
 
-/** 随包自带的字体，缺字检测里直接放行 */
-export const BUNDLED_FONTS = ["方正准圆_gbk", "方正准圆_GBK", "方正准圆"];
+/** 随包自带的字体（导出时整个 fonts/ 都会喂给 ffmpeg），缺字检测里直接放行；比对不分大小写 */
+export const BUNDLED_FONTS = ["方正准圆_gbk", "方正准圆", "FZ-ZhunYuan-GBK",
+  "荆南波波黑", "JingNanBoBoHei"];
 
 export const LAYOUT_KEY = "ytEditorLayout";
 

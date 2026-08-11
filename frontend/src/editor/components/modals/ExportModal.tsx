@@ -28,8 +28,13 @@ export function ExportModal() {
   const [preset, setPreset] = useState(1);
   const [miss, setMiss] = useState<string[]>([]);
 
-  // 打开时现算一遍缺字：模板/绑定可能在上次打开之后改过
-  useEffect(() => { if (open) setMiss(missingFonts()); }, [open]);
+  // 打开时现算一遍缺字：模板/绑定可能在上次打开之后改过。异步的，关掉了就别再 setState
+  useEffect(() => {
+    if (!open) return;
+    let alive = true;
+    missingFonts().then(m => { if (alive) setMiss(m); });
+    return () => { alive = false; };
+  }, [open]);
 
   const v = viewStore.get();
   const expClip = clip || v.curClip;

@@ -1,5 +1,5 @@
 import { ASS_EVENTS_HEAD, ASS_SCRIPT_INFO } from '../constants';
-import { fontMissing, getStyleMap } from '../ass';
+import { fontsMissing, getStyleMap } from '../ass';
 import { docStore, trackName } from '../store/docStore';
 import { assNm, assSec, assTs, assTx } from '../utils';
 import type { Lang, Seg } from '../types';
@@ -76,12 +76,12 @@ export function buildClipAss(T0: number, T1: number): string {
 }
 
 /** 当前会真的出现在画面上的那些样式所引用的字体里，系统找不到的那部分 */
-export function missingFonts(): string[] {
+export function missingFonts(): Promise<string[]> {
   const styleMap = getStyleMap();
   const names = new Set<string>();
   for (const L of outputLines()) {
     const st = styleMap[L.style];
     if (st && st.font) names.add(String(st.font).trim());
   }
-  return [...names].filter(n => n && fontMissing(n));
+  return fontsMissing([...names]);
 }

@@ -14,6 +14,12 @@ interface VideoState {
   retrieving: boolean;
   /** 取回进度文案，如 "42%（120 MB / 280 MB）" */
   retrievePct: string;
+  /** 正在转码成 H.264：和取回一样占着占位卡，只是不给「暂不加载」 */
+  transcoding: boolean;
+  /** 转码进度文案，如 "42%（00:12 / 00:30）" */
+  transcodePct: string;
+  /** 播放失败（多半是编码不支持）时才给转码按钮 */
+  canTranscode: boolean;
   /** 占位卡当前的说明文案（折叠/展开时复用，不被默认文案覆盖） */
   fbMsg: string;
   warn: string;
@@ -26,5 +32,6 @@ interface VideoState {
 
 export const videoStore = createStore<VideoState>({
   src: "", fallbackOpen: false, collapsed: false, retrieving: false, retrievePct: "",
+  transcoding: false, transcodePct: "", canTranscode: false,
   fbMsg: "", warn: "", usePath: null, badge: null, subBusy: null,
 });
