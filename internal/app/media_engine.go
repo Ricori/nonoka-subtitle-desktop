@@ -15,7 +15,7 @@ import (
 	"sync"
 	"time"
 
-	"online.nonoka.subtitle/desktop-wails/internal/platformprocess"
+	"online.nonoka.subtitle/desktop/internal/platformprocess"
 )
 
 type MediaMetadata struct {

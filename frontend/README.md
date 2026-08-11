@@ -166,7 +166,7 @@ const a = store.use(s => s.a);   // 组件内按需订阅
 <details>
 <summary><b>0. 起步：跑起来 & 调试</b></summary>
 
-1. 在 `desktop-wails/` 下 `task dev`，Wails 会启动 Go 后端并拉起本目录的 Vite。
+1. 在 `desktop/` 下 `task dev`，Wails 会启动 Go 后端并拉起本目录的 Vite。
 2. 应用窗口内按 `F12`（或右键检查）打开 WebView2 DevTools，Console 里可以直接敲 `await window.desktop.getLibrary()` 试后端接口。
 3. 改前端代码走 Vite HMR，热更新即时生效；改 Go 代码需要 Wails 重启。
 4. 提交前跑 `npm run typecheck`，`tsc` 是严格模式，类型错误不会被 Vite 拦下来。

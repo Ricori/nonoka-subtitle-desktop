@@ -2,7 +2,7 @@ import { createStore } from '../lib/createStore';
 import { reportHomeProbe } from '../hooks/homeProbe';
 import { setAppPhase, setCfg, showLogin } from './sessionStore';
 import { refresh, setLib } from './libraryStore';
-import type { FFmpegStatus, UpdateStatus } from '../../../bindings/online.nonoka.subtitle/desktop-wails/internal/app';
+import type { FFmpegStatus, UpdateStatus } from '../../../bindings/online.nonoka.subtitle/desktop/internal/app';
 
 interface UpdateBanner { version: string; }
 interface NewsItem { version: string; notes: string; }

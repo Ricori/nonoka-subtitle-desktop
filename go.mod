@@ -1,4 +1,4 @@
-module online.nonoka.subtitle/desktop-wails
+module online.nonoka.subtitle/desktop
 
 go 1.25.0
 

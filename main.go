@@ -3,7 +3,7 @@ package main
 import (
 	"embed"
 
-	backend "online.nonoka.subtitle/desktop-wails/internal/app"
+	backend "online.nonoka.subtitle/desktop/internal/app"
 )
 
 //go:embed all:frontend/dist

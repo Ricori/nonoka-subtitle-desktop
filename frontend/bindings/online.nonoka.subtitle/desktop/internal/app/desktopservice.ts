@@ -10,177 +10,177 @@ import { Call as $Call, CancellablePromise as $CancellablePromise } from "@wails
 import * as $models from "./models.js";
 
 export function AttachLocalVideo(id: string, source: string): $CancellablePromise<$models.VideoAttachResult> {
-    return $Call.ByID(63887408, id, source);
+    return $Call.ByID(2867088989, id, source);
 }
 
 export function CacheThumbFromCloud(id: string, sourceURL: string): $CancellablePromise<boolean> {
-    return $Call.ByID(659657762, id, sourceURL);
+    return $Call.ByID(3201451189, id, sourceURL);
 }
 
 export function CancelMediaJob(id: string): $CancellablePromise<boolean> {
-    return $Call.ByID(3188611870, id);
+    return $Call.ByID(2452044067, id);
 }
 
 export function ClearCache(id: string): $CancellablePromise<void> {
-    return $Call.ByID(1365821754, id);
+    return $Call.ByID(2159320043, id);
 }
 
 export function ConsumeReleaseNotes(): $CancellablePromise<$models.ReleaseNotes | null> {
-    return $Call.ByID(2179049497);
+    return $Call.ByID(2682044258);
 }
 
 export function CopyIntoCache(id: string, source: string): $CancellablePromise<string> {
-    return $Call.ByID(4132966138, id, source);
+    return $Call.ByID(2463007921, id, source);
 }
 
 export function DeleteTemp(path: string): $CancellablePromise<boolean> {
-    return $Call.ByID(3048151802, path);
+    return $Call.ByID(2321273979, path);
 }
 
 export function DownloadFromR2(id: string): $CancellablePromise<$models.DownloadResult> {
-    return $Call.ByID(1669950231, id);
+    return $Call.ByID(682467310, id);
 }
 
 export function ExtractAudio(id: string): $CancellablePromise<$models.AudioResult> {
-    return $Call.ByID(929404150, id);
+    return $Call.ByID(1952060215, id);
 }
 
 export function FFmpegStatus(): $CancellablePromise<$models.FFmpegStatus> {
-    return $Call.ByID(3957531904);
+    return $Call.ByID(347263493);
 }
 
 export function GetCacheStats(): $CancellablePromise<$models.CacheStats> {
-    return $Call.ByID(1208305976);
+    return $Call.ByID(3312126579);
 }
 
 export function GetClips(id: string): $CancellablePromise<$models.Clip[] | null> {
-    return $Call.ByID(1969005564, id);
+    return $Call.ByID(1950493669, id);
 }
 
 export function GetConfig(): $CancellablePromise<$models.AppConfig> {
-    return $Call.ByID(1560844507);
+    return $Call.ByID(4118018156);
 }
 
 export function GetLibrary(): $CancellablePromise<$models.LibraryEntry[] | null> {
-    return $Call.ByID(3567207380);
+    return $Call.ByID(1792544965);
 }
 
 export function GetUpdateStatus(): $CancellablePromise<$models.UpdateStatus> {
-    return $Call.ByID(1729265258);
+    return $Call.ByID(1365122765);
 }
 
 export function HasCache(id: string): $CancellablePromise<boolean> {
-    return $Call.ByID(388509741, id);
+    return $Call.ByID(1306065444, id);
 }
 
 export function ImportVideos(paths: string[] | null): $CancellablePromise<$models.ImportResult> {
-    return $Call.ByID(1902295754, paths);
+    return $Call.ByID(287724767, paths);
 }
 
 export function InstallUpdate(): $CancellablePromise<boolean> {
-    return $Call.ByID(3206529247);
+    return $Call.ByID(3973983020);
 }
 
 export function MigrateCacheDirectory(newDir: string): $CancellablePromise<$models.CacheMigrationResult> {
-    return $Call.ByID(3783115341, newDir);
+    return $Call.ByID(172299922, newDir);
 }
 
 export function OpenLibraryVideo(id: string): $CancellablePromise<$models.VideoInfo> {
-    return $Call.ByID(2902025237, id);
+    return $Call.ByID(2647419112, id);
 }
 
 export function PathExists(path: string): $CancellablePromise<boolean> {
-    return $Call.ByID(2724183912, path);
+    return $Call.ByID(15989157, path);
 }
 
 export function PickAndImportVideos(): $CancellablePromise<$models.ImportResult> {
-    return $Call.ByID(4152222822);
+    return $Call.ByID(585785109);
 }
 
 export function PickAndValidateVideo(id: string, expect: $models.VideoExpectation): $CancellablePromise<$models.VideoSelection> {
-    return $Call.ByID(315053460, id, expect);
+    return $Call.ByID(14969557, id, expect);
 }
 
 export function PickCacheDirectory(): $CancellablePromise<string> {
-    return $Call.ByID(3731482531);
+    return $Call.ByID(1258321978);
 }
 
 export function PickExportOutput(defaultName: string): $CancellablePromise<string> {
-    return $Call.ByID(2116135501, defaultName);
+    return $Call.ByID(2276701940, defaultName);
 }
 
 export function PickVideos(): $CancellablePromise<string[] | null> {
-    return $Call.ByID(3412144494);
+    return $Call.ByID(4240601771);
 }
 
 export function ProbeVideo(path: string): $CancellablePromise<$models.MediaMetadata> {
-    return $Call.ByID(4169708406, path);
+    return $Call.ByID(992163227, path);
 }
 
 export function RemoveLibraryData(id: string, options: $models.LibraryRemoveOptions): $CancellablePromise<void> {
-    return $Call.ByID(764329926, id, options);
+    return $Call.ByID(1207060261, id, options);
 }
 
 export function RemoveLibraryEntry(id: string, removeCache: boolean, removeThumb: boolean): $CancellablePromise<void> {
-    return $Call.ByID(2354170974, id, removeCache, removeThumb);
+    return $Call.ByID(3494841619, id, removeCache, removeThumb);
 }
 
 export function RenameLibraryID(oldID: string, newID: string): $CancellablePromise<boolean> {
-    return $Call.ByID(3220749485, oldID, newID);
+    return $Call.ByID(1604370550, oldID, newID);
 }
 
 export function RenameLibraryTitle(id: string, title: string): $CancellablePromise<boolean> {
-    return $Call.ByID(2896347814, id, title);
+    return $Call.ByID(3985619323, id, title);
 }
 
 export function RenderExport(options: $models.ExportOptions): $CancellablePromise<$models.ExportResult> {
-    return $Call.ByID(1139722777, options);
+    return $Call.ByID(4095604392, options);
 }
 
 export function ResolveVideo(id: string, options: $models.VideoResolveOptions): $CancellablePromise<$models.VideoResolution> {
-    return $Call.ByID(625424184, id, options);
+    return $Call.ByID(1972482405, id, options);
 }
 
 export function RetryFFmpeg(): $CancellablePromise<$models.FFmpegStatus> {
-    return $Call.ByID(2742329150);
+    return $Call.ByID(3994209917);
 }
 
 export function RevealInFolder(path: string): $CancellablePromise<void> {
-    return $Call.ByID(2845333333, path);
+    return $Call.ByID(1800941100, path);
 }
 
 export function SaveSubtitle(defaultName: string, content: string): $CancellablePromise<string> {
-    return $Call.ByID(114112206, defaultName, content);
+    return $Call.ByID(4162612367, defaultName, content);
 }
 
 export function SetClips(id: string, clips: $models.Clip[] | null): $CancellablePromise<boolean> {
-    return $Call.ByID(3336972040, id, clips);
+    return $Call.ByID(1672586945, id, clips);
 }
 
 export function SetConfig(config: $models.AppConfig): $CancellablePromise<$models.AppConfig> {
-    return $Call.ByID(628077783, config);
+    return $Call.ByID(3021699336, config);
 }
 
 export function SetOpenInEditor(id: string): $CancellablePromise<boolean> {
-    return $Call.ByID(4357643, id);
+    return $Call.ByID(4089954388, id);
 }
 
 export function SyncCloudLibrary(entries: $models.CloudLibraryEntry[] | null): $CancellablePromise<$models.LibraryEntry[] | null> {
-    return $Call.ByID(1108211700, entries);
+    return $Call.ByID(3009324977, entries);
 }
 
 export function ThumbnailURL(id: string): $CancellablePromise<string> {
-    return $Call.ByID(3147639070, id);
+    return $Call.ByID(1189671855, id);
 }
 
 export function TouchCache(id: string): $CancellablePromise<boolean> {
-    return $Call.ByID(4025053572, id);
+    return $Call.ByID(2069348169, id);
 }
 
 export function UploadFile(id: string, filePath: string, putURL: string, headers: { [_ in string]?: string } | null): $CancellablePromise<$models.UploadResult> {
-    return $Call.ByID(45454804, id, filePath, putURL, headers);
+    return $Call.ByID(3444769141, id, filePath, putURL, headers);
 }
 
 export function UploadThumb(id: string, putURL: string): $CancellablePromise<$models.UploadResult> {
-    return $Call.ByID(2622947826, id, putURL);
+    return $Call.ByID(1768323169, id, putURL);
 }

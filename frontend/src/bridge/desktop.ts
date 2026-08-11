@@ -1,5 +1,5 @@
 import { Events, System, Window } from "@wailsio/runtime";
-import { DesktopService, PrototypeService } from "../../bindings/online.nonoka.subtitle/desktop-wails/internal/app";
+import { DesktopService, PrototypeService } from "../../bindings/online.nonoka.subtitle/desktop/internal/app";
 import type {
   AppConfig,
   ExportOptions,
@@ -14,7 +14,7 @@ import type {
   ThumbReady,
   VideoFailed,
   VideoReady,
-} from "../../bindings/online.nonoka.subtitle/desktop-wails/internal/app";
+} from "../../bindings/online.nonoka.subtitle/desktop/internal/app";
 
 const listen = <T>(name: string, callback: (value: T) => void) =>
   Events.On(name, (event) => callback(event.data as T));

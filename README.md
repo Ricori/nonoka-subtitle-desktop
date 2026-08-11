@@ -77,7 +77,7 @@ task run:docker     # 构建并运行 Docker 镜像
 ## 📁 项目结构
 
 ```text
-desktop-wails/
+desktop/
 ├── main.go                  # 可执行程序入口，仅做装配
 ├── Taskfile.yml             # 构建/打包/开发命令定义
 ├── internal/

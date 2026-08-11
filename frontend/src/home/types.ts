@@ -1,7 +1,7 @@
 // 主页状态层用到的类型。桌面端原生数据结构（AppConfig/LibraryEntry 等）复用 Wails
 // 自动生成的绑定类型，不重复定义；服务端（Python /edit/state）返回的形状不在绑定里，
 // 在这里补上。
-export type { AppConfig, LibraryEntry } from '../../bindings/online.nonoka.subtitle/desktop-wails/internal/app';
+export type { AppConfig, LibraryEntry } from '../../bindings/online.nonoka.subtitle/desktop/internal/app';
 
 // /edit/state 返回的单条云端记录
 export interface RemoteVideo {

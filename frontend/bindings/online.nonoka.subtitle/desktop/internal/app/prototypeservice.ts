@@ -10,49 +10,49 @@ import { Call as $Call, CancellablePromise as $CancellablePromise } from "@wails
 import * as $models from "./models.js";
 
 export function CloseEditor(notice: $models.HomeNotice): $CancellablePromise<void> {
-    return $Call.ByID(1149965706, notice);
+    return $Call.ByID(3808530509, notice);
 }
 
 export function CurrentVideo(): $CancellablePromise<$models.VideoInfo> {
-    return $Call.ByID(1873583365);
+    return $Call.ByID(3372576252);
 }
 
 export function DiscardAndReturn(): $CancellablePromise<void> {
-    return $Call.ByID(475868520);
+    return $Call.ByID(3926448249);
 }
 
 export function OpenEditor(): $CancellablePromise<void> {
-    return $Call.ByID(2360678840);
+    return $Call.ByID(170457233);
 }
 
 export function Ping(value: number): $CancellablePromise<number> {
-    return $Call.ByID(3362236013, value);
+    return $Call.ByID(3065211272, value);
 }
 
 export function PlaybackStatus(): $CancellablePromise<$models.PlaybackProbe> {
-    return $Call.ByID(4277006090);
+    return $Call.ByID(192111315);
 }
 
 export function ReportHomeProbe(probe: $models.HomeProbe): $CancellablePromise<void> {
-    return $Call.ByID(227719454, probe);
+    return $Call.ByID(3981447105, probe);
 }
 
 export function ReportPlaybackProbe(probe: $models.PlaybackProbe): $CancellablePromise<void> {
-    return $Call.ByID(3447989708, probe);
+    return $Call.ByID(1429302171, probe);
 }
 
 export function ReturnHome(): $CancellablePromise<void> {
-    return $Call.ByID(3479581872);
+    return $Call.ByID(1308995225);
 }
 
 export function RuntimeInfo(): $CancellablePromise<$models.RuntimeInfo> {
-    return $Call.ByID(121014859);
+    return $Call.ByID(2883234712);
 }
 
 export function SelectVideoAndOpen(): $CancellablePromise<$models.VideoInfo> {
-    return $Call.ByID(139382341);
+    return $Call.ByID(266365500);
 }
 
 export function SetDirty(dirty: boolean): $CancellablePromise<void> {
-    return $Call.ByID(1615243349, dirty);
+    return $Call.ByID(2166984288, dirty);
 }

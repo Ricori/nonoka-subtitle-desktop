@@ -16,7 +16,7 @@ import (
 	"strings"
 	"time"
 
-	"online.nonoka.subtitle/desktop-wails/internal/platformprocess"
+	"online.nonoka.subtitle/desktop/internal/platformprocess"
 )
 
 var bundledAssets fs.FS
