@@ -3,7 +3,7 @@ param(
     [ValidateSet("windows", "macos", "all")][string]$Platform = "windows",
     [ValidateSet("amd64", "arm64")][string]$Arch = "amd64",
     [ValidatePattern('^$|^\d+\.\d+\.\d+$')][string]$MinVersion = "",
-    [string]$NotesFile = "docs/RELEASE_NOTES.md"
+    [string]$NotesFile = "CHANGELOG.md"
 )
 
 $ErrorActionPreference = "Stop"
@@ -77,12 +77,32 @@ $arguments = @(
     "-output", $manifest
 )
 $notesPath = Join-Path $projectRoot $NotesFile
-if (Test-Path -LiteralPath $notesPath -PathType Leaf) {
-    $arguments += @("-notes-file", $notesPath)
+if (-not (Test-Path -LiteralPath $notesPath -PathType Leaf)) {
+    throw "Missing release notes file: $notesPath"
 }
+
+$manifestNotesPath = $notesPath
+$changelogPath = Join-Path $projectRoot "CHANGELOG.md"
+$temporaryNotesPath = $null
+if ([IO.Path]::GetFullPath($notesPath) -eq [IO.Path]::GetFullPath($changelogPath)) {
+    $changelog = [IO.File]::ReadAllText($changelogPath)
+    $escapedVersion = [regex]::Escape($Version)
+    $section = [regex]::Match($changelog, "(?ms)^##[ \t]+$escapedVersion[ \t]*\r?\n(.*?)(?=^##[ \t]+|\z)")
+    if (-not $section.Success -or [string]::IsNullOrWhiteSpace($section.Groups[1].Value)) {
+        throw "Missing or empty CHANGELOG.md section for version $Version"
+    }
+    $temporaryNotesPath = [IO.Path]::GetTempFileName()
+    [IO.File]::WriteAllText($temporaryNotesPath, $section.Groups[1].Value.Trim(), [Text.UTF8Encoding]::new($false))
+    $manifestNotesPath = $temporaryNotesPath
+}
+$arguments += @("-notes-file", $manifestNotesPath)
 $arguments += $artifacts
-& $wails @arguments
-if ($LASTEXITCODE -ne 0) { throw "Failed to generate update manifest" }
+try {
+    & $wails @arguments
+    if ($LASTEXITCODE -ne 0) { throw "Failed to generate update manifest" }
+} finally {
+    if ($temporaryNotesPath) { Remove-Item -LiteralPath $temporaryNotesPath -Force }
+}
 
 if ($MinVersion) {
     $data = Get-Content -LiteralPath $manifest -Raw -Encoding UTF8 | ConvertFrom-Json

@@ -3,7 +3,7 @@ param(
     [ValidateSet("windows", "macos", "all")][string]$Platform = "windows",
     [ValidateSet("amd64", "arm64")][string]$Arch = "amd64",
     [ValidatePattern('^$|^\d+\.\d+\.\d+$')][string]$MinVersion = "",
-    [string]$NotesFile = "docs/RELEASE_NOTES.md",
+    [string]$NotesFile = "CHANGELOG.md",
     [switch]$VersionOnly,
     [switch]$SkipBuild,
     [switch]$Publish
