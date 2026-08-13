@@ -14,7 +14,7 @@
     !define INFO_PRODUCTNAME "NONOKA SUBTITLE"
 !endif
 !ifndef INFO_PRODUCTVERSION
-    !define INFO_PRODUCTVERSION "0.6.5"
+    !define INFO_PRODUCTVERSION "0.6.6"
 !endif
 !ifndef INFO_COPYRIGHT
     !define INFO_COPYRIGHT "© 2026 Takamichika"
