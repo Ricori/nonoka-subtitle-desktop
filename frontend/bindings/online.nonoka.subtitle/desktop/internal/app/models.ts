@@ -135,6 +135,12 @@ export interface MediaProgress {
     "total": number;
 }
 
+export interface PeaksResult {
+    "per_sec": number;
+    "duration": number;
+    "peaks": number[] | null;
+}
+
 export interface PlaybackProbe {
     "ready": boolean;
     "seeked": boolean;

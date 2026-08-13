@@ -25,7 +25,7 @@ const maxVideoDuration = 2 * 60 * 60
 
 const (
 	backendBase    = "https://ricori--ytapi.modal.run"
-	desktopVersion = "0.6.4"
+	desktopVersion = "0.6.5"
 )
 
 type AppConfig struct {
@@ -436,6 +436,32 @@ func (s *DesktopService) ExtractAudio(id string) (AudioResult, error) {
 		return AudioResult{}, errors.New("视频没有音轨")
 	}
 	return s.media.ExtractAudio(context.Background(), id, path, metadata.Duration)
+}
+
+// ComputePeaks 本地算一份波形 peaks，算完由前端传回服务端存档
+func (s *DesktopService) ComputePeaks(id string) (PeaksResult, error) {
+	if !validLibraryID.MatchString(id) {
+		return PeaksResult{}, errors.New("无效的媒体 ID")
+	}
+	entry, ok := s.findEntry(id)
+	if !ok {
+		return PeaksResult{}, errors.New("媒体库中没有这个视频")
+	}
+	path := entry.SrcPath
+	if cached := s.cachePath(id); fileExists(cached) {
+		path = cached
+	}
+	if !fileExists(path) {
+		return PeaksResult{}, errors.New("找不到本地视频文件")
+	}
+	metadata, err := s.media.Probe(context.Background(), path)
+	if err != nil {
+		return PeaksResult{}, err
+	}
+	if !metadata.HasAudio {
+		return PeaksResult{}, errors.New("视频没有音轨")
+	}
+	return s.media.Peaks(context.Background(), path, metadata.Duration)
 }
 
 func (s *DesktopService) CancelMediaJob(id string) bool {

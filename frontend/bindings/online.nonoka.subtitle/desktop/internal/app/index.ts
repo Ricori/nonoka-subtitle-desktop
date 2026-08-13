@@ -27,6 +27,7 @@ export type {
     LibraryRemoveOptions,
     MediaMetadata,
     MediaProgress,
+    PeaksResult,
     PlaybackProbe,
     ReleaseNotes,
     RuntimeInfo,

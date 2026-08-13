@@ -44,7 +44,7 @@ export const isUnauthorized = (e: unknown) =>
   e instanceof ApiError && (e.status === 401 || e.status === 403);
 
 export interface ApiOptions {
-  method?: "GET" | "POST";
+  method?: "GET" | "POST" | "PUT";
   body?: unknown;
   /** 超时时间（毫秒） */
   timeout?: number;
@@ -97,3 +97,6 @@ export const apiGet = <T = any>(path: string, opts: Omit<ApiOptions, "method" | 
 
 export const apiPost = <T = any>(path: string, body: unknown, opts: Omit<ApiOptions, "method" | "body"> = {}) =>
   api<T>(path, { ...opts, method: "POST", body });
+
+export const apiPut = <T = any>(path: string, body: unknown, opts: Omit<ApiOptions, "method" | "body"> = {}) =>
+  api<T>(path, { ...opts, method: "PUT", body });

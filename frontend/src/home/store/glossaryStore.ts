@@ -1,5 +1,6 @@
 import { createStore } from '../lib/createStore';
 import { apiGet, apiPost } from '../lib/apiClient';
+import { parseAxisFile, type AxisKind, type AxisParse } from '../lib/assAxis';
 import { setGlossaryManager, setSpeakerOpen, uiStore } from './uiStore';
 import type { GlossItem, GlossSets, SpeakerResult } from '../types';
 
@@ -22,11 +23,23 @@ interface GlossaryState {
   // 译文留空，编辑器里照样能逐句重译
   correctOn: boolean;
   translateOn: boolean;
+  // ── 第一阶段：有没有已有产物 ──────────────────────────────────────────
+  // 弹窗分两步走：先问「有没有已经打好的轴」，再按答案决定第二步显示什么。
+  // 三种产物走的是三条完全不同的路（见 lib/assAxis.ts 顶部），所以这一步不能省。
+  /** "none" = 没有产物（默认，与旧行为一致）；"have" = 有，等着选文件 */
+  axisMode: "none" | "have";
+  axisFile: string;
+  /** 解析结果；null = 还没选文件或解析失败 */
+  axisParse: AxisParse | null;
+  /** 用户可手动改判类型（判错的代价很高：日文轴被当成空轴就白跑一遍识别） */
+  axisKind: AxisKind;
+  axisError: string;
 }
 
 export const glossaryStore = createStore<GlossaryState>({
   sets: null, items: [], admin: false, loaded: false, spkOn: false, spkNum: "", glossValue: "",
   correctOn: true, translateOn: true,
+  axisMode: "none", axisFile: "", axisParse: null, axisKind: "empty", axisError: "",
 });
 
 export const setSpkOn = (spkOn: boolean) => glossaryStore.set({ spkOn });
@@ -34,6 +47,28 @@ export const setSpkNum = (spkNum: string) => glossaryStore.set({ spkNum });
 export const setGlossValue = (glossValue: string) => glossaryStore.set({ glossValue });
 export const setCorrectOn = (correctOn: boolean) => glossaryStore.set({ correctOn });
 export const setTranslateOn = (translateOn: boolean) => glossaryStore.set({ translateOn });
+export const setAxisKind = (axisKind: AxisKind) => glossaryStore.set({ axisKind });
+
+/** 选「我没有产物」：清掉可能选过的文件，免得退回来再进时还挂着上一份 */
+export const setAxisMode = (axisMode: "none" | "have") =>
+  glossaryStore.set(axisMode === "have"
+    ? { axisMode }
+    : { axisMode, axisFile: "", axisParse: null, axisError: "" });
+
+/** 选中一份 ASS/SRT：当场解析并回显，判错了用户可以在下拉里改判 */
+export async function loadAxisFile(file: File) {
+  glossaryStore.set({ axisFile: file.name, axisParse: null, axisError: "" });
+  try {
+    const parsed = parseAxisFile(await file.text(), file.name);
+    if (!parsed.rows.length) {
+      glossaryStore.set({ axisError: "这个文件里没有解析出任何时间轴，换一份试试" });
+      return;
+    }
+    glossaryStore.set({ axisParse: parsed, axisKind: parsed.kind });
+  } catch (e) {
+    glossaryStore.set({ axisError: `读取失败：${e instanceof Error ? e.message : String(e)}` });
+  }
+}
 
 /** 返回这一轮实际生效的清单：调用方（比如管理弹窗刚打开时要按最新清单定位）要的是现在这份 */
 export async function loadGlossSets(force?: boolean) {
@@ -74,23 +109,38 @@ export const deleteGlossSet = (name: string) =>
 let speakerResolve: ((value: SpeakerResult | null) => void) | null = null;
 
 export function askSpeakers() {
+  // 每次重新问：产物是一条一份的，上一条选过的轴绝不能带到下一条上（那会把别的视频的轴
+  // 硬套过来，服务端体检虽然拦得住，但用户根本不知道自己交了什么）
+  glossaryStore.set({ axisMode: "none", axisFile: "", axisParse: null, axisError: "" });
   setSpeakerOpen(true);
   loadGlossSets();
   return new Promise<SpeakerResult | null>(res => { speakerResolve = res; });
 }
 
 export function closeSpeakers(ok: boolean) {
+  const { spkOn, spkNum, glossValue, correctOn, translateOn,
+    axisMode, axisParse, axisKind, axisFile } = glossaryStore.get();
+  // 选了「我已有产物」却还没选出可用的文件时，回车/点确定都不该放行——
+  // 放行的后果是静默按「没有产物」跑一遍完整识别，用户拿到的东西和他要的完全不同。
+  if (ok && axisMode === "have" && !axisParse) return;
   setSpeakerOpen(false);
   const resolve = speakerResolve;
   speakerResolve = null;
   if (!resolve) return;
   if (!ok) { resolve(null); return; }
-  const { spkOn, spkNum, glossValue, correctOn, translateOn } = glossaryStore.get();
+  const axis = axisMode === "have" && axisParse
+    ? { kind: axisKind, rows: axisParse.rows, filename: axisFile, speakers: axisParse.speakers }
+    : null;
   const n = parseInt(spkNum, 10);
-  const speakers = !spkOn ? 0 : (Number.isFinite(n) && n >= 2 ? Math.min(n, 10) : -1);
+  // 轴自己标了说话人就不跑模型分离——人标的比模型准，UI 那边也已经不给选了
+  const speakers = (axis && axis.speakers.length >= 2) ? 0
+    : !spkOn ? 0 : (Number.isFinite(n) && n >= 2 ? Math.min(n, 10) : -1);
   resolve({
     speakers, glossary: glossValue || "",
+    // 导入日文/双语轴时这两个开关不适用：日文轴恒定只跑翻译，双语轴什么都不跑。
+    // 空轴仍然两阶段都可选（纠错在轴模式下只剩纠错，不再合并行）。
     correct: correctOn, translate: translateOn,
+    axis,
   });
 }
 

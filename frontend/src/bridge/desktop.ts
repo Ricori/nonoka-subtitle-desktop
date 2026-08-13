@@ -160,6 +160,7 @@ export const desktopBridge = {
   clearCache: (id = "") => DesktopService.ClearCache(id),
   migrateCacheDir: DesktopService.MigrateCacheDirectory,
   extractAudio: DesktopService.ExtractAudio,
+  computePeaks: DesktopService.ComputePeaks,
   uploadFile: DesktopService.UploadFile,
   uploadThumb: DesktopService.UploadThumb,
   cacheThumb: DesktopService.CacheThumbFromCloud,

@@ -25,6 +25,13 @@ export function ClearCache(id: string): $CancellablePromise<void> {
     return $Call.ByID(2159320043, id);
 }
 
+/**
+ * ComputePeaks 本地算一份波形 peaks，算完由前端传回服务端存档
+ */
+export function ComputePeaks(id: string): $CancellablePromise<$models.PeaksResult> {
+    return $Call.ByID(2403456949, id);
+}
+
 export function ConsumeReleaseNotes(): $CancellablePromise<$models.ReleaseNotes | null> {
     return $Call.ByID(2682044258);
 }

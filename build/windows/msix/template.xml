@@ -17,7 +17,7 @@
 		PackageDisplayName="NONOKA SUBTITLE"
         PublisherName="CN=Takamichika"
         PublisherDisplayName="Takamichika"
-        Version="0.6.4.0"
+        Version="0.6.5.0"
 		PackageDescription="Wails v3 desktop implementation">
         <Capabilities>
             <Capability Name="runFullTrust" />

@@ -78,6 +78,17 @@ export interface SpeakerResult {
   glossary: string; // 术语表名，""=不使用
   correct: boolean;   // ⑧ A 阶段：合并被切碎的句子 + ASR 纠错
   translate: boolean; // ⑨ B 阶段：翻译。关掉则产物只有原文，译文全空
+  // 已有产物（可选）。null=没有产物，走完整识别链。
+  // kind="empty" 时 rows 只有时间，随任务上传当人工轴；"ja"/"bi" 不上传视频，走 /edit/video/import
+  axis: AxisImport | null;
+}
+
+export interface AxisImport {
+  kind: import('./lib/assAxis').AxisKind;
+  rows: import('./lib/assAxis').AxisRow[];
+  filename: string;
+  /** 轴里读到的说话人（≥2 位时服务端不跑 diarization，直接按轴分轨） */
+  speakers: string[];
 }
 
 // ask() 页内确认框

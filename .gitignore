@@ -8,3 +8,4 @@ scripts/node_modules
 *.syso
 docs
 build/windows/nsis/MicrosoftEdgeWebview2Setup.exe
+.claude

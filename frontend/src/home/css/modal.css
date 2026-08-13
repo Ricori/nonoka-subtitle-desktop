@@ -81,6 +81,19 @@
   overscroll-behavior: contain;
 }
 
+.speaker-modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.speaker-modal-body::-webkit-scrollbar-thumb {
+  background: var(--raised);
+  border-radius: 4px;
+}
+
+.speaker-modal-body::-webkit-scrollbar-thumb:hover {
+  background: var(--line);
+}
+
 .speaker-modal-foot {
   flex: 0 0 auto;
   margin: 0;
@@ -468,3 +481,51 @@ body.light .fake-select {
   margin-top: 20px;
 }
 
+
+/* 已有产物：两张二选一的卡片。用按钮而不是单选框——这一步决定后面走哪条链
+   （识别 / 只翻译 / 直接导入），值得占一整行的视觉分量。 */
+.axis-pick {
+  display: flex;
+  gap: 10px;
+}
+
+.axis-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  text-align: left;
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+
+.axis-card:hover {
+  border-color: var(--accent-border);
+}
+
+.axis-card.on {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.axis-card b {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.axis-card span {
+  font-size: 12px;
+  color: var(--mut);
+}
+
+/* 只读的文件名框：与 .field input 同款，但不接受输入 */
+.axis-file {
+  cursor: default;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
