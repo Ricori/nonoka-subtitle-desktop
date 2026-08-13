@@ -75,17 +75,19 @@ func (s *DesktopService) SaveSubtitle(defaultName string, content string) (strin
 	if app == nil {
 		return "", errors.New("应用尚未初始化")
 	}
+	// 格式看调用方给的默认文件名，不额外加参数（改签名要重新生成 Wails 绑定）
+	format := subtitleFormat(defaultName)
 	path, err := app.Dialog.SaveFile().
-		SetMessage("导出 ASS 字幕").
+		SetMessage("导出 " + strings.ToUpper(format[1:]) + " 字幕").
 		SetFilename(normalizeSubtitleFilename(defaultName)).
-		AddFilter("ASS 字幕", "*.ass").
+		AddFilter(strings.ToUpper(format[1:])+" 字幕", "*"+format).
 		AttachToWindow(s.prototype.dialogWindow()).
 		PromptForSingleSelection()
 	if err != nil || path == "" {
 		return "", err
 	}
-	if !strings.EqualFold(filepath.Ext(path), ".ass") {
-		path += ".ass"
+	if !strings.EqualFold(filepath.Ext(path), format) {
+		path += format
 	}
 	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
 		return "", err
@@ -93,14 +95,23 @@ func (s *DesktopService) SaveSubtitle(defaultName string, content string) (strin
 	return path, nil
 }
 
+// 支持的字幕扩展名；认不出来一律按 ASS 走（历史上这个接口只导 ASS）
+func subtitleFormat(name string) string {
+	if strings.EqualFold(filepath.Ext(strings.TrimSpace(name)), ".srt") {
+		return ".srt"
+	}
+	return ".ass"
+}
+
 func normalizeSubtitleFilename(name string) string {
+	format := subtitleFormat(name)
 	name = strings.TrimSpace(filepath.Base(name))
 	name = invalidFilename.ReplaceAllString(name, "_")
 	if name == "" || name == "." {
-		name = "subtitle.ass"
+		name = "subtitle" + format
 	}
-	if !strings.EqualFold(filepath.Ext(name), ".ass") {
-		name += ".ass"
+	if !strings.EqualFold(filepath.Ext(name), format) {
+		name += format
 	}
 	return name
 }

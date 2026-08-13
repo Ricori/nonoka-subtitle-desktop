@@ -1,32 +1,33 @@
-import { apiUrl, authHeaders, getVid } from '../session';
+import { getVid } from '../session';
 import { docStore } from '../store/docStore';
-import { flushSave } from '../store/saveStore';
 import { toast } from '../store/uiStore';
 import { viewStore } from '../store/viewStore';
 import { errText } from '../utils';
-import { buildClipAss } from './assBuild';
+import { buildAss, buildClipAss, missingStyles } from './assBuild';
 
 /**
- * 完整片走服务端那份（与网页版逐字一致，是 buildAss 的对照基准）；
- * 切片没有对应的服务端接口，本地按区间拼——两条路的样式/堆叠规则同源。
+ * 导出 ASS。整片和切片都在本地拼（buildAss 与服务端 edit_export_ass 逐字一致，也正是
+ * 预览用的那份），不走服务端：导出算的就是屏幕上这份文档，离线也能出，
+ * 也不必先把改动 PUT 上去等一轮往返。
  */
 export async function exportAss() {
   try {
-    await flushSave();
     const { title } = docStore.get();
     const v = viewStore.get();
-    let content: string;
+    // 服务端那份遇到模板里没有的样式名直接 400；本地 outputLines 只会悄悄少一条线，
+    // 所以在这里补上同一道闸，别出坏文件
+    const miss = missingStyles();
+    if (miss.length) {
+      toast("导出失败：样式模板里不存在 " + miss.join("、") + "，请在轨道设置里改绑");
+      return;
+    }
     let name = (title || getVid()).replace(/\.[a-z0-9]{2,4}$/i, "") || getVid();
+    let content: string;
     if (v.curClip) {
       content = buildClipAss(v.t0, v.t1);
       name += " - " + v.curClip.name;
     } else {
-      const r = await fetch(apiUrl(`/edit/${getVid()}/export.ass`), { headers: authHeaders() });
-      if (!r.ok) {
-        const d = await r.json().catch(() => ({} as any));
-        throw new Error(d.detail || "HTTP " + r.status);
-      }
-      content = await r.text();
+      content = buildAss();
     }
     const path = await window.desktop.saveSubtitle(name + ".ass", content);
     if (!path) return;

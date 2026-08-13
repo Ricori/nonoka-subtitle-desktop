@@ -18,15 +18,22 @@ interface GlossaryState {
   spkOn: boolean;
   spkNum: string;
   glossValue: string;
+  // LLM 两阶段开关（⑧合并+纠错 / ⑨翻译），默认都开。关掉翻译时产物只有原文，
+  // 译文留空，编辑器里照样能逐句重译
+  correctOn: boolean;
+  translateOn: boolean;
 }
 
 export const glossaryStore = createStore<GlossaryState>({
   sets: null, items: [], admin: false, loaded: false, spkOn: false, spkNum: "", glossValue: "",
+  correctOn: true, translateOn: true,
 });
 
 export const setSpkOn = (spkOn: boolean) => glossaryStore.set({ spkOn });
 export const setSpkNum = (spkNum: string) => glossaryStore.set({ spkNum });
 export const setGlossValue = (glossValue: string) => glossaryStore.set({ glossValue });
+export const setCorrectOn = (correctOn: boolean) => glossaryStore.set({ correctOn });
+export const setTranslateOn = (translateOn: boolean) => glossaryStore.set({ translateOn });
 
 /** 返回这一轮实际生效的清单：调用方（比如管理弹窗刚打开时要按最新清单定位）要的是现在这份 */
 export async function loadGlossSets(force?: boolean) {
@@ -78,10 +85,13 @@ export function closeSpeakers(ok: boolean) {
   speakerResolve = null;
   if (!resolve) return;
   if (!ok) { resolve(null); return; }
-  const { spkOn, spkNum, glossValue } = glossaryStore.get();
+  const { spkOn, spkNum, glossValue, correctOn, translateOn } = glossaryStore.get();
   const n = parseInt(spkNum, 10);
   const speakers = !spkOn ? 0 : (Number.isFinite(n) && n >= 2 ? Math.min(n, 10) : -1);
-  resolve({ speakers, glossary: glossValue || "" });
+  resolve({
+    speakers, glossary: glossValue || "",
+    correct: correctOn, translate: translateOn,
+  });
 }
 
 /** 打开术语表管理弹窗 */

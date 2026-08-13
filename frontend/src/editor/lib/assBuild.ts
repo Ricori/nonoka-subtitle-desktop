@@ -33,6 +33,22 @@ export function outputLines(): OutLine[] {
   return out;
 }
 
+/**
+ * 有绑定、未隐藏、但模板里查不到的样式名。outputLines 会把这些线**悄悄丢掉**，
+ * 出来的字幕少一条谁都不会发现，所以导出前要拿它拦一道——服务端那份是直接报 400。
+ */
+export function missingStyles(): string[] {
+  const { tracks, trackMeta } = docStore.get();
+  const styleMap = getStyleMap();
+  const miss = new Set<string>();
+  const chk = (lane: { hidden: boolean; style: string | null } | undefined) => {
+    if (lane && !lane.hidden && lane.style && !styleMap[lane.style]) miss.add(lane.style);
+  };
+  if (trackMeta) { chk(trackMeta.zh); chk(trackMeta.ja); }
+  for (const tr of tracks) { chk(tr.zh); chk(tr.ja); }
+  return [...miss];
+}
+
 export function buildAss(): string {
   const evs: string[] = [];
   for (const L of outputLines()) {

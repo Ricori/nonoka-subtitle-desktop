@@ -47,6 +47,47 @@
   font-size: 16px;
 }
 
+/* 转写选项使用固定外壳，只有中间内容区滚动。 */
+#spkmask.on {
+  display: block;
+}
+
+.modal.speaker-modal {
+  position: absolute;
+  inset: 0;
+  height: 620px;
+  max-height: calc(100vh - 32px);
+  margin: auto;
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.speaker-modal-head {
+  flex: 0 0 auto;
+  padding: 22px 24px 16px;
+}
+
+.speaker-modal-head h2 {
+  margin: 0;
+}
+
+.speaker-modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 0 24px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.speaker-modal-foot {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 18px 24px 22px;
+  border-top: 1px solid var(--line-soft);
+}
+
 /* 比设置弹窗高一层：清理缓存的确认是从设置里弹出来的，不能被它压住 */
 .mask.ask-mask {
   z-index: 55;
@@ -191,14 +232,68 @@
 }
 
 .field label.chkline input {
-  width: auto;
-  accent-color: var(--accent);
+  appearance: none;
+  -webkit-appearance: none;
+  display: grid;
+  place-content: center;
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--bg);
+  box-shadow: none;
   cursor: pointer;
 }
 
-/* 只填 2~10 的人数框，不跟着 .field input 占满整个弹窗宽度 */
-#spk-num {
-  width: 120px;
+.field label.chkline input::before {
+  content: "";
+  width: 8px;
+  height: 4px;
+  border-bottom: 2px solid var(--on-grad);
+  border-left: 2px solid var(--on-grad);
+  opacity: 0;
+  transform: translateY(-1px) rotate(-45deg);
+}
+
+.field label.chkline input:checked {
+  padding: 0;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.field label.chkline input:checked::before {
+  opacity: 1;
+}
+
+.field label.chkline input:focus,
+.field label.chkline input:active {
+  padding: 0;
+}
+
+.field label.chkline input:focus-visible {
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+/* 只填 2~10 的人数框：与标签并排，不跟着 .row input 撑满剩余宽度 */
+#spk-count .row label {
+  margin-bottom: 0;
+}
+
+#spk-count .row input {
+  flex: 0 0 120px;
+}
+
+/* 上面那个开关没打开时的从属字段：置灰但仍占位——抽走会改变弹窗高度，
+   居中的弹窗跟着上下跳，正在点开关的地方就在手底下动 */
+.speaker-modal .field.off {
+  opacity: .4;
+}
+
+.speaker-modal .field.off input {
+  cursor: not-allowed;
 }
 
 /* 术语表下拉：与 .field input 同底同框，只把右侧下拉箭头补上（与 .sortsel 同款 SVG） */

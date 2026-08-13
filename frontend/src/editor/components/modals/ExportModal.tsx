@@ -4,7 +4,6 @@ import { buildClipAss, missingFonts } from '../../lib/assBuild';
 import { getVid } from '../../session';
 import { docStore } from '../../store/docStore';
 import { expJob, exportStore } from '../../store/exportStore';
-import { flushSave } from '../../store/saveStore';
 import { toast } from '../../store/uiStore';
 import { viewStore } from '../../store/viewStore';
 import { errText, fmt } from '../../utils';
@@ -55,7 +54,8 @@ export function ExportModal() {
     if (!outPath) return;
     exportStore.set({ busy: true, pct: 0 });
     try {
-      await flushSave();   // 与导出 ASS 一致：先把改动落盘再出片
+      // 字幕在本地拼（buildClipAss），出片也在本地跑 ffmpeg：整条路不碰服务端，
+      // 出的就是屏幕上这份文档，不必先等一次落盘往返
       const r = await window.desktop.renderExport({
         id: getVid(), t0: T0, t1: T1,
         ass: buildClipAss(T0, T1),

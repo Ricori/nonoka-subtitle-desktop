@@ -46,7 +46,7 @@ export async function startTranscribe(it: MergedVideoItem) {
   // 先问说话人 + 术语表设置再开工
   const opts = await askSpeakers();
   if (opts === null) return;   // 用户取消
-  const { speakers, glossary } = opts;
+  const { speakers, glossary, correct, translate } = opts;
 
   // 换主键后 cachedSet 会按新 id 重建，这个判断得用换之前的答案
   const wasCached = libraryStore.get().cachedSet.has(entry.id);
@@ -79,7 +79,7 @@ export async function startTranscribe(it: MergedVideoItem) {
     patchPipe({ stage: "start", msg: "启动任务…" });
     await apiPost("/edit/video/start", {
       video_id: init.video_id, filename: entry.title, fp: entry.fp, media: "audio",
-      speakers, glossary,
+      speakers, glossary, correct, translate,
     });
 
     // 5) 本地条目换主键，此后一切按服务端 video_id 对齐（缩略图/缓存一并改名）

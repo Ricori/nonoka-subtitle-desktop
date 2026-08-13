@@ -13,10 +13,12 @@ import (
 
 func TestNormalizeSubtitleFilename(t *testing.T) {
 	tests := map[string]string{
-		" episode 01 ": "episode 01.ass",
-		"clip.ass":     "clip.ass",
-		"bad:name.ass": "bad_name.ass",
-		"":             "subtitle.ass",
+		" episode 01 ":     "episode 01.ass",
+		"clip.ass":         "clip.ass",
+		"bad:name.ass":     "bad_name.ass",
+		"":                 "subtitle.ass",
+		"clip.srt":         "clip.srt",
+		"bad:name - 中文.srt": "bad_name - 中文.srt",
 	}
 	for input, want := range tests {
 		if got := normalizeSubtitleFilename(input); got != want {

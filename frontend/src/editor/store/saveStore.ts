@@ -121,7 +121,8 @@ export async function flushClips() {
   return clipSavedVersion >= clipSaveVersion;
 }
 
-/** 重译/导出前先把本地改动落盘（服务端按落盘内容取上下文/导出） */
+/** 关闭编辑器前把本地改动（字幕 + 切片）全部落盘。
+ *  导出不再走这里：SRT/ASS/MP4 都在本地按内存里这份文档拼，落不落盘与产物无关。 */
 export async function flushSave() {
   let guard = 0;
   while ((saveStore.get().dirty || saveStore.get().saving) && !saveStore.get().conflicted && guard++ < 40) {
