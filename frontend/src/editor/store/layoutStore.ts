@@ -1,5 +1,5 @@
 import { createStore } from '../../home/lib/createStore';
-import { LAYOUT_KEY, ROW_H0, ROW_MAX, ROW_MIN, WAVE_GAIN_MAX, ZOOM_MAX } from '../constants';
+import { LAYOUT_KEY, ROW_H0, ROW_MAX, ROW_MIN, SPECTRUM_ROW_H0, WAVE_GAIN_MAX, WAVE_ROW_MAX, ZOOM_MAX } from '../constants';
 import { clampN } from '../utils';
 import { viewStore } from './viewStore';
 
@@ -8,7 +8,7 @@ import { viewStore } from './viewStore';
 interface RawLayout {
   sideW?: number; pps?: number; lblW?: number; tlH?: number;
   rowH?: { wave?: number; ja?: number; zh?: number };
-  waveGain?: number; scrubAudio?: boolean; rowV?: number;
+  waveGain?: number; audioView?: "wave" | "spectrum"; scrubAudio?: boolean; rowV?: number;
   /** 旧版把「隐藏原文轨」存在本机，现在迁到服务端的 track_meta 里 */
   hideJa?: boolean;
 }
@@ -29,6 +29,7 @@ interface LayoutState {
   rowH: { wave: number; ja: number; zh: number };
   /** 波形显示增益：只放大画出来的高度，不动音频本身。0 = 自动 */
   waveGain: number;
+  audioView: "wave" | "spectrum";
   /** 擦洗音：拖时间轴/步进时播一小段声音，默认不开 */
   scrubAudio: boolean;
   snap: boolean;
@@ -39,12 +40,14 @@ export const layoutStore = createStore<LayoutState>({
   lblW: clampN(LAYOUT.lblW, 90, 360, 160),
   tlViewH: clampN(LAYOUT.tlH, 150, 900, Math.round(window.innerHeight * .45)),
   rowH: {
-    wave: clampN(LAYOUT.rowH?.wave, ROW_MIN, ROW_MAX, ROW_H0),
+    wave: clampN(LAYOUT.rowH?.wave, LAYOUT.audioView === "spectrum" ? SPECTRUM_ROW_H0 : ROW_MIN,
+      WAVE_ROW_MAX, LAYOUT.audioView === "spectrum" ? SPECTRUM_ROW_H0 : ROW_H0),
     ja: clampN(LAYOUT.rowH?.ja, ROW_MIN, ROW_MAX, ROW_H0),
     zh: clampN(LAYOUT.rowH?.zh, ROW_MIN, ROW_MAX, ROW_H0),
   },
   waveGain: (typeof LAYOUT.waveGain === "number" && isFinite(LAYOUT.waveGain) && LAYOUT.waveGain >= 0)
     ? Math.min(LAYOUT.waveGain, WAVE_GAIN_MAX) : 0,
+  audioView: LAYOUT.audioView === "spectrum" ? "spectrum" : "wave",
   scrubAudio: LAYOUT.scrubAudio === true,
   snap: true,
 });
@@ -61,7 +64,8 @@ export function saveLayout() {
     try {
       localStorage.setItem(LAYOUT_KEY, JSON.stringify({
         sideW: l.sideW, pps: viewStore.get().pps, rowH: l.rowH, tlH: l.tlViewH,
-        lblW: l.lblW, waveGain: l.waveGain, scrubAudio: l.scrubAudio, rowV: 2,
+        lblW: l.lblW, waveGain: l.waveGain, audioView: l.audioView,
+        scrubAudio: l.scrubAudio, rowV: 2,
       }));
     } catch { /* 隐私模式下写不进去，忽略 */ }
   }, 300);

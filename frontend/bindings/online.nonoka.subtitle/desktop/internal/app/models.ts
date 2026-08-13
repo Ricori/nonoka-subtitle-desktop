@@ -166,6 +166,14 @@ export interface RuntimeInfo {
     "smokeMode": boolean;
 }
 
+export interface SpectrogramTileResult {
+    "url": string;
+    "start": number;
+    "duration": number;
+    "width": number;
+    "height": number;
+}
+
 export interface SwitchMetric {
     "kind": string;
     "millis": number;

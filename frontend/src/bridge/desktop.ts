@@ -161,6 +161,7 @@ export const desktopBridge = {
   migrateCacheDir: DesktopService.MigrateCacheDirectory,
   extractAudio: DesktopService.ExtractAudio,
   computePeaks: DesktopService.ComputePeaks,
+  spectrogramTile: DesktopService.SpectrogramTile,
   uploadFile: DesktopService.UploadFile,
   uploadThumb: DesktopService.UploadThumb,
   cacheThumb: DesktopService.CacheThumbFromCloud,

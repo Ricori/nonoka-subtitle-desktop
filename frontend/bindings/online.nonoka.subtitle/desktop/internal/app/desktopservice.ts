@@ -172,6 +172,13 @@ export function SetOpenInEditor(id: string): $CancellablePromise<boolean> {
     return $Call.ByID(4089954388, id);
 }
 
+/**
+ * SpectrogramTile 按需生成当前时间轴需要的频谱切片。图片只写本地临时缓存。
+ */
+export function SpectrogramTile(id: string, start: number, duration: number): $CancellablePromise<$models.SpectrogramTileResult> {
+    return $Call.ByID(662066303, id, start, duration);
+}
+
 export function SyncCloudLibrary(entries: $models.CloudLibraryEntry[] | null): $CancellablePromise<$models.LibraryEntry[] | null> {
     return $Call.ByID(3009324977, entries);
 }

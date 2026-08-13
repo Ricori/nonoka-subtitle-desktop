@@ -31,6 +31,7 @@ export type {
     PlaybackProbe,
     ReleaseNotes,
     RuntimeInfo,
+    SpectrogramTileResult,
     SwitchMetric,
     ThumbReady,
     TranscodeResult,

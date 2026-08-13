@@ -126,25 +126,26 @@ type ThumbReady struct {
 }
 
 type DesktopService struct {
-	mu           sync.RWMutex
-	cacheMu      sync.Mutex
-	videoMu      sync.Mutex
-	updateMu     sync.Mutex
-	paths        AppPaths
-	config       AppConfig
-	library      []libraryDiskEntry
-	ffmpeg       *FFmpegManager
-	media        *MediaEngine
-	prototype    *PrototypeService
-	app          *application.App
-	home         *application.WebviewWindow
-	thumbJobs    map[string]chan struct{}
-	videoJobs    map[string]context.CancelFunc
-	openInEditor string
-	streamBase   string
-	httpClient   *http.Client
-	updateStatus UpdateStatus
-	updateBusy   bool
+	mu            sync.RWMutex
+	cacheMu       sync.Mutex
+	spectrogramMu sync.Mutex
+	videoMu       sync.Mutex
+	updateMu      sync.Mutex
+	paths         AppPaths
+	config        AppConfig
+	library       []libraryDiskEntry
+	ffmpeg        *FFmpegManager
+	media         *MediaEngine
+	prototype     *PrototypeService
+	app           *application.App
+	home          *application.WebviewWindow
+	thumbJobs     map[string]chan struct{}
+	videoJobs     map[string]context.CancelFunc
+	openInEditor  string
+	streamBase    string
+	httpClient    *http.Client
+	updateStatus  UpdateStatus
+	updateBusy    bool
 }
 
 var validLibraryID = regexp.MustCompile(`^[0-9A-Za-z_-]{1,64}$`)

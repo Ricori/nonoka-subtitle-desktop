@@ -1,12 +1,12 @@
 import { useEffect, useRef } from 'react';
 import { shallowEqual } from '../../home/lib/createStore';
-import { PAD_Y, ROW_MAX, ROW_MIN, SB } from '../constants';
+import { PAD_Y, ROW_MAX, ROW_MIN, SB, SPECTRUM_ROW_H0, WAVE_ROW_MAX } from '../constants';
 import { toggleDefaultHidden, toggleTrackHidden } from '../lib/edits';
 import { applyRowHeight, rowDisplayH } from '../lib/rows';
 import { effGain, setWaveGain, stepWaveGain } from '../lib/wave';
 import { splitHandler } from '../lib/split';
 import { docStore, laneColor } from '../store/docStore';
-import { layoutStore } from '../store/layoutStore';
+import { layoutStore, saveLayout, setRowH } from '../store/layoutStore';
 import { selStore, setActiveTrack } from '../store/selectionStore';
 import { openTrackPop } from '../store/uiStore';
 import { rulerH, viewStore } from '../store/viewStore';
@@ -60,6 +60,19 @@ function GainButton() {
   );
 }
 
+function AudioViewButton() {
+  const mode = layoutStore.use(s => s.audioView);
+  const toggle = () => {
+    const next = mode === "wave" ? "spectrum" : "wave";
+    layoutStore.set({ audioView: next });
+    if (next === "spectrum" && layoutStore.get().rowH.wave < SPECTRUM_ROW_H0) setRowH("wave", SPECTRUM_ROW_H0);
+    saveLayout();
+  };
+  return <button className="lbtn audio-view" title="切换波形 / 本地频谱图" onClick={toggle}>
+    {mode === "wave" ? "波形" : "频谱"}
+  </button>;
+}
+
 function TrackLabel({ r, cur }: { r: RowSpec; cur: boolean }) {
   const { tracks, trackMeta } = docStore.get();
   const lang = r.lang as Lang;
@@ -104,6 +117,7 @@ export function TrackLabels({ rows, labelsRef }: {
   rows: RowSpec[]; labelsRef: React.RefObject<HTMLDivElement | null>;
 }) {
   const lblW = layoutStore.use(s => s.lblW);
+  const audioView = layoutStore.use(s => s.audioView);
   const curTrack = selStore.use(s => s.curTrack);
   // 切片层数变了标尺就会变高，分隔线的落点跟着重算
   viewStore.use(s => ({ clips: s.clips, t0: s.t0, t1: s.t1 }), shallowEqual);
@@ -119,7 +133,8 @@ export function TrackLabels({ rows, labelsRef }: {
         ? (
           <div className="lbl wave" key={r.key} style={{ height: rowDisplayH(r) + "px" }}>
             <i></i><span className="tname">音频 A1</span>
-            <GainButton />
+            <AudioViewButton />
+            {audioView === "wave" && <GainButton />}
           </div>
         )
         : <TrackLabel key={r.key} r={r} cur={r.ti === curTrack} />)}
@@ -129,7 +144,7 @@ export function TrackLabels({ rows, labelsRef }: {
         <div key={r.key + "-h"} className="row-resize" title="拖动改这条轨道的高度"
           style={{ top: (bottoms[i] - 3) + "px" }}
           onPointerDown={splitHandler(() => r.height, (v0, _dx, dy) =>
-            applyRowHeight(r, Math.min(Math.max(v0 + dy, ROW_MIN), ROW_MAX)))} />
+            applyRowHeight(r, Math.min(Math.max(v0 + dy, ROW_MIN), r.kind === "wave" ? WAVE_ROW_MAX : ROW_MAX)))} />
       ))}
     </div>
   );

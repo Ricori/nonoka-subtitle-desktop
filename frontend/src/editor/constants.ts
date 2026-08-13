@@ -13,6 +13,8 @@ export const WAVE_GAIN_STEPS = [1, 1.5, 2, 3, 4, 6, 8, 12, 16, 24];
 // 行高上下限与默认值；隐藏轨压成 22px 标签行
 export const ROW_MIN = 36;
 export const ROW_MAX = 60;
+export const SPECTRUM_ROW_H0 = 140;
+export const WAVE_ROW_MAX = 240;
 export const ROW_H0 = 48;
 export const HIDDEN_H = 22;
 /** 末轨之后留一段空，留出继续往下拖的余量 */
