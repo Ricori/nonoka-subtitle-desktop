@@ -78,6 +78,8 @@ export interface SpeakerResult {
   glossary: string; // 术语表名，""=不使用
   correct: boolean;   // ⑧ A 阶段：合并被切碎的句子 + ASR 纠错
   translate: boolean; // ⑨ B 阶段：翻译。关掉则产物只有原文，译文全空
+  translationPrompt: string; // B 阶段自定义译文风格，服务端校验后注入
+  translationPromptHasStyle: boolean; // true=完整风格并替换默认 TRANSLATION_STYLE
   // 已有产物（可选）。null=没有产物，走完整识别链。
   // kind="empty" 时 rows 只有时间，随任务上传当人工轴；"ja"/"bi" 不上传视频，走 /edit/video/import
   axis: AxisImport | null;

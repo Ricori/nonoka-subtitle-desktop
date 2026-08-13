@@ -529,3 +529,166 @@ body.light .fake-select {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.speaker-modal .field textarea {
+  width: 100%;
+  min-height: 88px;
+  resize: vertical;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  line-height: 1.5;
+  transition: border-color .13s, box-shadow .13s;
+}
+
+.speaker-modal .field textarea:focus {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+.prompt-title {
+  justify-content: space-between;
+}
+
+.prompt-example-trigger {
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px dashed currentColor;
+  background: transparent;
+  color: var(--mut);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.prompt-example-trigger:hover,
+.prompt-example-trigger:focus-visible {
+  color: var(--accent);
+  outline: none;
+}
+
+.prompt-example-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--mask-bg);
+}
+
+.prompt-example-dialog {
+  width: min(760px, calc(100vw - 48px));
+  height: min(720px, calc(100vh - 48px));
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--panel);
+  box-shadow: var(--shadow-pop);
+  overflow: hidden;
+}
+
+.prompt-example-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px 22px 16px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.prompt-example-head h2 {
+  margin: 0 0 5px;
+  font-size: 17px;
+}
+
+.prompt-example-head p {
+  margin: 0;
+  color: var(--mut);
+  font-size: 12px;
+}
+
+.prompt-example-close {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--mut);
+  font-size: 24px;
+  line-height: 28px;
+  cursor: pointer;
+}
+
+.prompt-example-close:hover,
+.prompt-example-close:focus-visible {
+  background: var(--raised);
+  color: var(--text);
+  outline: none;
+}
+
+.prompt-example-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0;
+  padding: 20px 24px;
+  overflow: auto;
+  background: var(--bg);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+
+.prompt-example-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.prompt-example-content::-webkit-scrollbar-thumb {
+  background: var(--raised);
+  border-radius: 4px;
+}
+
+.prompt-example-content::-webkit-scrollbar-thumb:hover {
+  background: var(--line);
+}
+
+
+.prompt-example-foot {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 22px 18px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.prompt-copy-state {
+  min-height: 18px;
+  color: var(--mut);
+  font-size: 12px;
+}
+
+.prompt-copy-state.bad {
+  color: var(--bad);
+}
+
+.prompt-example-actions {
+  display: flex;
+  gap: 8px;
+}

@@ -23,6 +23,8 @@ interface GlossaryState {
   // 译文留空，编辑器里照样能逐句重译
   correctOn: boolean;
   translateOn: boolean;
+  translationPrompt: string;
+  translationPromptHasStyle: boolean;
   // ── 第一阶段：有没有已有产物 ──────────────────────────────────────────
   // 弹窗分两步走：先问「有没有已经打好的轴」，再按答案决定第二步显示什么。
   // 三种产物走的是三条完全不同的路（见 lib/assAxis.ts 顶部），所以这一步不能省。
@@ -38,7 +40,7 @@ interface GlossaryState {
 
 export const glossaryStore = createStore<GlossaryState>({
   sets: null, items: [], admin: false, loaded: false, spkOn: false, spkNum: "", glossValue: "",
-  correctOn: true, translateOn: true,
+  correctOn: true, translateOn: true, translationPrompt: "", translationPromptHasStyle: false,
   axisMode: "none", axisFile: "", axisParse: null, axisKind: "empty", axisError: "",
 });
 
@@ -47,6 +49,9 @@ export const setSpkNum = (spkNum: string) => glossaryStore.set({ spkNum });
 export const setGlossValue = (glossValue: string) => glossaryStore.set({ glossValue });
 export const setCorrectOn = (correctOn: boolean) => glossaryStore.set({ correctOn });
 export const setTranslateOn = (translateOn: boolean) => glossaryStore.set({ translateOn });
+export const setTranslationPrompt = (translationPrompt: string) => glossaryStore.set({ translationPrompt });
+export const setTranslationPromptHasStyle = (translationPromptHasStyle: boolean) =>
+  glossaryStore.set({ translationPromptHasStyle });
 export const setAxisKind = (axisKind: AxisKind) => glossaryStore.set({ axisKind });
 
 /** 选「我没有产物」：清掉可能选过的文件，免得退回来再进时还挂着上一份 */
@@ -118,7 +123,8 @@ export function askSpeakers() {
 }
 
 export function closeSpeakers(ok: boolean) {
-  const { spkOn, spkNum, glossValue, correctOn, translateOn,
+  const { spkOn, spkNum, glossValue, correctOn, translateOn, translationPrompt,
+    translationPromptHasStyle,
     axisMode, axisParse, axisKind, axisFile } = glossaryStore.get();
   // 选了「我已有产物」却还没选出可用的文件时，回车/点确定都不该放行——
   // 放行的后果是静默按「没有产物」跑一遍完整识别，用户拿到的东西和他要的完全不同。
@@ -140,6 +146,8 @@ export function closeSpeakers(ok: boolean) {
     // 导入日文/双语轴时这两个开关不适用：日文轴恒定只跑翻译，双语轴什么都不跑。
     // 空轴仍然两阶段都可选（纠错在轴模式下只剩纠错，不再合并行）。
     correct: correctOn, translate: translateOn,
+    translationPrompt: translationPrompt.trim(),
+    translationPromptHasStyle: !!translationPrompt.trim() && translationPromptHasStyle,
     axis,
   });
 }

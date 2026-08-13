@@ -46,12 +46,13 @@ export async function startTranscribe(it: MergedVideoItem) {
   // 先问「有没有已有产物」+ 说话人 + 术语表设置再开工
   const opts = await askSpeakers();
   if (opts === null) return;   // 用户取消
-  const { speakers, glossary, correct, translate, axis } = opts;
+  const { speakers, glossary, correct, translate, translationPrompt,
+    translationPromptHasStyle, axis } = opts;
 
   // 日文轴 / 中文轴 / 双语轴：文字已经有了，识别那半条链整个用不上——**连视频都不上传**。
   // 走 /edit/video/import 直接落库（日文轴再由服务端补翻译，另外两种一次 LLM 都不发）。
   if (axis && axis.kind !== "empty") {
-    await importExisting(entry, axis, glossary);
+    await importExisting(entry, axis, glossary, translationPrompt, translationPromptHasStyle);
     return;
   }
 
@@ -87,7 +88,8 @@ export async function startTranscribe(it: MergedVideoItem) {
     patchPipe({ stage: "start", msg: "启动任务…" });
     await apiPost("/edit/video/start", {
       video_id: init.video_id, filename: entry.title, fp: entry.fp, media: "audio",
-      speakers, glossary, correct, translate,
+      speakers, glossary, correct, translate, translation_prompt: translationPrompt,
+      translation_prompt_has_style: translationPromptHasStyle,
       ...(axis ? { axis: axis.rows.map(r => [r.t0, r.t1, r.spk]) } : {}),
     });
 
@@ -142,7 +144,8 @@ async function uploadLocalPeaks(videoId: string) {
  * 那套逻辑再写一遍。签出来的 put_url 直接不用——R2 上不会有对象（has_r2=false），
  * 编辑器照本地缓存播。波形由 uploadLocalPeaks 本地补一份。
  */
-async function importExisting(entry: LibraryEntry, axis: AxisImport, glossary: string) {
+async function importExisting(entry: LibraryEntry, axis: AxisImport, glossary: string,
+  translationPrompt: string, translationPromptHasStyle: boolean) {
   const wasCached = libraryStore.get().cachedSet.has(entry.id);
   setPipe({ cardId: entry.id, localId: entry.id, vid: null, stage: "start", done: 0, total: 0,
     msg: "导入字幕…", tmp: null });
@@ -152,6 +155,8 @@ async function importExisting(entry: LibraryEntry, axis: AxisImport, glossary: s
     const res = await apiPost("/edit/video/import", {
       video_id: init.video_id, kind: axis.kind, rows: axis.rows,
       filename: entry.title, fp: entry.fp, media: "audio", glossary,
+      translation_prompt: translationPrompt,
+      translation_prompt_has_style: translationPromptHasStyle,
     });
 
     await window.desktop.renameLibraryId(entry.id, init.video_id);
