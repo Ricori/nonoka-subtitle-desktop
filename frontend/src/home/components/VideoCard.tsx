@@ -9,7 +9,7 @@ import { cancelPipe, pipelineStore, startTranscribe, stopTask } from '../store/p
 import { closePopover, togglePopover } from '../store/uiStore';
 import {
   PHASE_TEXT, RUNNING, taskProgress, etaText, fmtSize, fmtDur, fmtDate,
-  onPipe, pipeLabel, pipePct, inR2, blockReason, localKey,
+  onPipe, pipeLabel, pipePct, AVAIL_META, availKind, blockReason, localKey,
 } from '../utils';
 import type { MergedVideoItem, PipeState } from '../types';
 
@@ -25,10 +25,8 @@ function StateBadge({ it, pipe }: { it: MergedVideoItem; pipe: PipeState | null 
 }
 
 function AvailChip({ it, cached, hasSrc }: { it: MergedVideoItem; cached: boolean; hasSrc: boolean }) {
-  if (cached) return <span className="chip c-ok">✓ 已缓存</span>;
-  if (hasSrc) return <span className="chip c-ok">✓ 本机视频</span>;
-  if (inR2(it)) return <span className="chip c-cloud">☁ 云端文件</span>;
-  return <span className="chip c-warn">⚠ 视频缺失</span>;
+  const m = AVAIL_META[availKind(it, cached, hasSrc)];
+  return <span className={"chip " + m.cls}>{m.ico} {m.label}</span>;
 }
 
 interface PrimaryActionProps {

@@ -34,7 +34,7 @@ export function TopBar() {
 
       <PopoverMenu id="gear" anchorRef={gearRef}>
         <button role="menuitem" onClick={() => { closePopover(); openGlossaryManager(); }}>
-          <span className="ico">▤</span>专业术语表
+          <span className="ico">▤</span>知识库
         </button>
         <button role="menuitem" onClick={() => { closePopover(); setSettingsOpen(true); }}>
           <span className="ico">⚙</span>设置

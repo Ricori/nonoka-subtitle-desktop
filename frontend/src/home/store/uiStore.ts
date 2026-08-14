@@ -1,5 +1,6 @@
 import { createStore } from '../lib/createStore';
 import { closeAsk } from '../lib/notify';
+import { AVAIL_ORDER, type AvailKind } from '../utils';
 
 export type SortMode = "new" | "name" | "dur";
 export type ViewMode = "grid" | "list";
@@ -9,6 +10,8 @@ interface UiState {
   // 修剪/小写后的版本，否则用户输入中间就会被强改），匹配时用 normalizedFilter
   filter: string;
   normalizedFilter: string;
+  /** 视频状态多选筛选，空数组=不筛。顺序恒等于 AVAIL_ORDER，按钮上的摘要才不会跳来跳去 */
+  avail: AvailKind[];
   sortMode: SortMode;
   view: ViewMode;
   // 弹窗开合。集中在一处，登录闸门离开 ready 时才好一次性收干净
@@ -21,13 +24,20 @@ interface UiState {
 }
 
 export const uiStore = createStore<UiState>({
-  filter: "", normalizedFilter: "", sortMode: "new", view: "grid",
+  filter: "", normalizedFilter: "", avail: [], sortMode: "new", view: "grid",
   settingsOpen: false, speakerOpen: false, gmOpen: false, gmPreselect: null,
   popover: null,
 });
 
 export const setFilter = (filter: string) =>
   uiStore.set({ filter, normalizedFilter: filter.trim().toLowerCase() });
+
+export const toggleAvail = (kind: AvailKind) => uiStore.set(s => ({
+  avail: s.avail.includes(kind)
+    ? s.avail.filter(k => k !== kind)
+    : AVAIL_ORDER.filter(k => k === kind || s.avail.includes(k)),
+}));
+export const clearAvail = () => uiStore.set(s => (s.avail.length ? { avail: [] } : {}));
 export const setSortMode = (sortMode: SortMode) => uiStore.set({ sortMode });
 export const setView = (view: ViewMode) => uiStore.set({ view });
 

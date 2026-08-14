@@ -3,6 +3,14 @@ import { TRACK_PALETTE } from '../constants';
 import { styleRgb } from '../ass';
 import type { Lang, Peaks, Seg, Ti, Track, TrackMeta } from '../types';
 
+export interface KnowledgeLearningState {
+  status: "idle" | "queued" | "running" | "done" | "error";
+  knowledge?: string;
+  rev?: number;
+  error?: string;
+  report?: { added?: number; updated?: number; activated?: number; skipped?: number; examined?: number };
+}
+
 /**
  * 字幕文档。句对象就地可变（拖动、文本编辑直接改字段），改完调 bumpDoc() 触发重渲染。
  * 不做不可变复制是有意的：selSet、撤销快照、拖动都靠对象引用认句，复制一次就全断了。
@@ -13,6 +21,9 @@ interface DocState {
   trackMeta: TrackMeta | null;   // 默认轨展示元数据（存服务端）
   assTemplate: string;      // 全局 ASS 样式模板原文（存服务端）
   isAdmin: boolean;         // 用 ADMIN_TOKEN 登录：模板全站共享，只有管理员能改
+  knowledgeBase: string;    // 本视频转写时选择的知识库
+  canLearnKnowledge: boolean;
+  knowledgeLearning: KnowledgeLearningState;
   rev: number;              // 服务端乐观锁版本
   title: string;
   videoFp: string | null;   // 上传时算好的文件指纹，选文件兜底校验用
@@ -22,6 +33,7 @@ interface DocState {
 
 export const docStore = createStore<DocState>({
   segs: [], tracks: [], trackMeta: null, assTemplate: "", isAdmin: false,
+  knowledgeBase: "", canLearnKnowledge: false, knowledgeLearning: { status: "idle" },
   rev: 0, title: "", videoFp: null, peaks: null, version: 0,
 });
 

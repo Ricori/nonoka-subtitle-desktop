@@ -62,20 +62,47 @@ export interface KeybarState {
   fix: boolean;
 }
 
-// 专业术语表
+export interface KnowledgeEvidence {
+  video_id: string;
+  title: string;
+  seq: string;
+  ja: string;
+  zh: string;
+  observed_at: number;
+}
+
+export interface KnowledgeEntry {
+  id: string;
+  kind: "term" | "asr_correction" | "context";
+  category: string;
+  source: string;
+  target: string;
+  aliases: string[];
+  target_aliases: string[];
+  note: string;
+  status: "active" | "approved" | "trusted" | "candidate" | "rejected";
+  confidence: number;
+  origin: "learned" | "manual" | "legacy_import" | string;
+  occurrences: number;
+  evidence: KnowledgeEvidence[];
+  updated_at: number;
+}
+
 export interface GlossItem {
   name: string;
-  csv: string;
   can_edit: boolean;
   mine: boolean;
-  rows: number;
+  entry_count: number;
+  status_counts: Record<string, number>;
+  settings: { auto_activate_confidence: number };
   owner?: string;
+  schema_version: number;
 }
 export type GlossSets = Record<string, string>;
 
 export interface SpeakerResult {
   speakers: number; // 0=关；-1=开但人数交给模型估；>=2=开且已知人数
-  glossary: string; // 术语表名，""=不使用
+  glossary: string; // 知识库名，""=不使用
   correct: boolean;   // ⑧ A 阶段：合并被切碎的句子 + ASR 纠错
   translate: boolean; // ⑨ B 阶段：翻译。关掉则产物只有原文，译文全空
   translationPrompt: string; // B 阶段自定义译文风格，服务端校验后注入

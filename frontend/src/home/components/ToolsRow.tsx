@@ -1,3 +1,4 @@
+import { AvailFilter } from './AvailFilter';
 import { CustomSelect, type SelectOption } from './CustomSelect';
 import { libraryStore, pickAndImport } from '../store/libraryStore';
 import { setFilter, setSortMode, setView, uiStore, type SortMode, type ViewMode } from '../store/uiStore';
@@ -34,6 +35,7 @@ export function ToolsRow() {
             <input id="q" className="search" placeholder="搜索文件名…" value={filter}
               onChange={e => setFilter(e.target.value)} />
           </div>
+          <AvailFilter />
           <CustomSelect id="sort" variant="sort" value={sortMode} options={SORT_OPTIONS}
             onChange={v => setSortMode(v as SortMode)} />
           <div className="viewtoggle">

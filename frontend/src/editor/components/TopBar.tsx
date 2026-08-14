@@ -7,6 +7,7 @@ import type { SrtLang } from '../lib/srtBuild';
 import { docStore } from '../store/docStore';
 import { openExport } from '../store/exportStore';
 import { manualSave, saveStore } from '../store/saveStore';
+import { knowledgeLearningStore, learnKnowledge } from '../store/knowledgeLearningStore';
 import { showCtx } from '../store/uiStore';
 
 /**
@@ -19,6 +20,9 @@ export function TopBar() {
   const { stateText, stateCls } = saveStore.use(
     s => ({ stateText: s.stateText, stateCls: s.stateCls }), shallowEqual);
   const [expBusy, setExpBusy] = useState(false);
+  const learningBusy = knowledgeLearningStore.use(s => s.busy);
+  const canLearn = docStore.use(s => s.canLearnKnowledge);
+  const knowledgeBase = docStore.use(s => s.knowledgeBase);
 
   // 导出期间按钮置灰，别让人连点出两次保存对话框
   const runExport = async (fn: () => Promise<void>) => {
@@ -53,6 +57,10 @@ export function TopBar() {
             ], e.currentTarget)}>导出 ▾</button>
           <button className="btn primary" id="btn-save" title="保存 (Ctrl+S)"
             onClick={() => void manualSave()}>保存</button>
+          <button className="btn" id="btn-learn-knowledge"
+            title={knowledgeBase ? `让AI从校订字幕中学习，并更新「${knowledgeBase}」知识库` : "本视频没有选择知识库"}
+            disabled={!canLearn || learningBusy} onClick={() => void learnKnowledge()}>
+            {learningBusy ? "学习中…" : "学习知识"}</button>
         </div>
       </div>
     </header>

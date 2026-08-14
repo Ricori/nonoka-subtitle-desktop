@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { createStore } from '../lib/createStore';
 import { ApiError, apiGet, apiPost, hasKey } from '../lib/apiClient';
 import { confirm, promptText, toast } from '../lib/notify';
-import { RUNNING, errText, localKey, mergeLibrary } from '../utils';
+import { RUNNING, availKind, errText, localKey, mergeLibrary } from '../utils';
 import { uiStore } from './uiStore';
 import { isReady, setAppPhase, setKeyOK, sessionStore, showKeybar, showLogin } from './sessionStore';
 import type { LibraryEntry, MergedVideoItem, RemoteVideo } from '../types';
@@ -62,18 +62,26 @@ export function markStarted(lib: LibraryEntry[], v: RemoteVideo) {
   commit({ lib, remote: remote.some(r => r.video_id === v.video_id) ? remote : [...remote, v] });
 }
 
-/** 搜索 + 排序后的展示列表。只有 VideoWall 用得上，放在组件侧算，store 里只存完整的 merged */
+/** 搜索 + 状态筛选 + 排序后的展示列表。只有 VideoWall 用得上，放在组件侧算，store 里只存完整的 merged */
 export function useVisibleItems() {
   const merged = libraryStore.use(s => s.merged);
+  const cachedSet = libraryStore.use(s => s.cachedSet);
+  const srcSet = libraryStore.use(s => s.srcSet);
   const filter = uiStore.use(s => s.normalizedFilter);
+  const avail = uiStore.use(s => s.avail);
   const sortMode = uiStore.use(s => s.sortMode);
   return useMemo(() => {
-    const out = merged.filter(it => !filter || it.title.toLowerCase().includes(filter));
+    const out = merged.filter(it => {
+      if (filter && !it.title.toLowerCase().includes(filter)) return false;
+      if (!avail.length) return true;
+      const key = localKey(it);
+      return avail.includes(availKind(it, cachedSet.has(key), srcSet.has(key)));
+    });
     if (sortMode === "name") out.sort((a, b) => a.title.localeCompare(b.title, "zh"));
     else if (sortMode === "dur") out.sort((a, b) => (b.duration || 0) - (a.duration || 0));
     // sortMode "new"：merged 已按 addedAt 降序给好，不用再排
     return out;
-  }, [merged, filter, sortMode]);
+  }, [merged, cachedSet, srcSet, filter, avail, sortMode]);
 }
 
 /** 单调递增，只有最后发起的那轮探测能写回结果——导入和轮询撞上时别让旧结果盖掉新的 */

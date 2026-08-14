@@ -148,6 +148,24 @@ body.light .sortsel {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23767c96'/%3E%3C/svg%3E");
 }
 
+/* 定宽：摘要文案在「全部状态 / 已缓存 / 2 种状态」之间换来换去，不定宽整条工具栏会跟着抖 */
+.availsel {
+  min-width: 108px;
+  text-align: left;
+}
+
+/* 状态筛选按钮：筛着的时候点亮，免得列表少了一半还找不到原因 */
+.sortsel.on {
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  background-color: var(--accent-dim);
+  color: var(--accent);
+}
+
+/* 多选菜单：勾选项左侧留出 .ico 的位置，未选中时那格是空的 */
+.custom-select-menu button.picked {
+  color: var(--accent);
+}
+
 .viewtoggle {
   display: flex;
   background: var(--raised);

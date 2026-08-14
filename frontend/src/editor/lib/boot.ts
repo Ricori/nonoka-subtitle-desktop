@@ -4,6 +4,7 @@ import { apiUrl, authHeaders, backHome, getVid } from '../session';
 import { bumpDoc, docStore } from '../store/docStore';
 import { LAYOUT } from '../store/layoutStore';
 import { setLoadedState } from '../store/saveStore';
+import { resumeKnowledgeLearning } from '../store/knowledgeLearningStore';
 import { select } from '../store/selectionStore';
 import { modalStore, toast } from '../store/uiStore';
 import { videoStore } from '../store/videoStore';
@@ -82,6 +83,9 @@ export async function runBootSequence() {
       segs, tracks, trackMeta,
       assTemplate: data.ass_template || "",
       isAdmin: !!data.is_admin,
+      knowledgeBase: data.knowledge_base || "",
+      canLearnKnowledge: !!data.can_learn_knowledge,
+      knowledgeLearning: data.knowledge_learning || { status: "idle" },
       peaks,
     });
     parseAssTemplate(docStore.get().assTemplate);
@@ -105,6 +109,7 @@ export async function runBootSequence() {
     ensureBlkWin(true);
     if (segs.length) select(0);
     setLoadedState();
+    resumeKnowledgeLearning();
   } catch (e: any) {
     // 加载失败没有可用的编辑器，留在这儿只能看着遮罩——直接回主页，
     // 原因交给主页弹提示（它有 toast，这边遮罩底下什么都没有）

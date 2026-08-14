@@ -14,11 +14,13 @@ export function VideoWall() {
   const items = useVisibleItems();
   const loaded = libraryStore.use(s => s.loaded);
   const filter = uiStore.use(s => s.normalizedFilter);
+  const avail = uiStore.use(s => s.avail);
   const view = uiStore.use(s => s.view);
   const wallClass = "wall" + (view === "list" ? " list" : "");
+  const filtering = !!filter || avail.length > 0;
 
   if (!items.length) {
-    if (!loaded && !filter) {
+    if (!loaded && !filtering) {
       return (
         <div id="wall" className={wallClass}>
           <div className="empty loading">
@@ -28,13 +30,13 @@ export function VideoWall() {
         </div>
       );
     }
-    if (filter) {
+    if (filtering) {
       return (
         <div id="wall" className={wallClass}>
           <div className="empty" id="emptybox">
             <div className="big">(・_・;)</div>
             <div className="t">没有匹配的视频</div>
-            <div className="s">换个关键词试试</div>
+            <div className="s">{filter ? "换个关键词试试" : "换个筛选条件试试"}</div>
           </div>
         </div>
       );

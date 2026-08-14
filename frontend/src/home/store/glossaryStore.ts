@@ -2,10 +2,10 @@ import { createStore } from '../lib/createStore';
 import { apiGet, apiPost } from '../lib/apiClient';
 import { parseAxisFile, type AxisKind, type AxisParse } from '../lib/assAxis';
 import { setGlossaryManager, setSpeakerOpen, uiStore } from './uiStore';
-import type { GlossItem, GlossSets, SpeakerResult } from '../types';
+import type { GlossItem, GlossSets, KnowledgeEntry, SpeakerResult } from '../types';
 
-// 术语表清单缓存 + 转写选项弹窗（说话人+术语表）的 Promise 式确认。
-// 清单：{名称: CSV 文本} + 每套的元信息（能不能改、多少条）。登录后首次用到时拉一次并缓存，
+// 知识库清单缓存 + 转写选项弹窗的 Promise 式确认。
+// 清单只含名称与统计，具体知识条目在管理弹窗选中时再拉。
 // 管理界面增删改后带 force 重拉。拉不到就只留「不使用」。
 interface GlossaryState {
   /** null = 还没拉过；{} 是合法结果（一套都没有），不能拿它当「未加载」 */
@@ -82,17 +82,19 @@ export async function loadGlossSets(force?: boolean) {
 
   let nextSets: GlossSets = {}, nextItems: GlossItem[] | null = null, nextAdmin = false, ok = false;
   try {
-    const d = await apiGet<{ sets?: GlossSets; items?: GlossItem[]; is_admin?: boolean }>("/edit/glossary-sets", {
+    const d = await apiGet<{ knowledge_bases?: Record<string, GlossItem>; items?: GlossItem[]; is_admin?: boolean }>("/edit/knowledge-bases", {
       timeout: 10_000, handleUnauthorized: false,
     });
-    if (d.sets) { nextSets = d.sets; nextItems = d.items ?? null; nextAdmin = !!d.is_admin; ok = true; }
+    if (d.knowledge_bases) {
+      nextItems = d.items ?? Object.values(d.knowledge_bases);
+      nextSets = Object.fromEntries(nextItems.map(item => [item.name, item.name]));
+      nextAdmin = !!d.is_admin;
+      ok = true;
+    }
   } catch { /* 拉不到就只留「不使用」 */ }
   if (!ok && cur.loaded) return { sets: cur.sets ?? {}, items: cur.items };   // 留着上次的清单
 
-  // 老后端没有 items 字段：当成一份谁都改不了的只读清单，管理界面照样能看
-  const items = nextItems || Object.keys(nextSets).map(name => ({
-    name, csv: nextSets[name], can_edit: false, mine: false, rows: 0,
-  }));
+  const items = nextItems || [];
   glossaryStore.set({
     sets: nextSets, items, admin: nextAdmin, loaded: ok,
     // 当前选中的那套被删了就回落到「不使用」
@@ -101,14 +103,35 @@ export async function loadGlossSets(force?: boolean) {
   return { sets: nextSets, items };
 }
 
-export async function saveGlossSet(name: string, csv: string, oldName: string | null) {
-  return apiPost<{ name: string; csv: string; rows: number }>("/edit/glossary/save", {
-    name, csv, old_name: oldName || null,
+export async function loadKnowledgeBase(name: string) {
+  return apiPost<{ base: GlossItem; entries: KnowledgeEntry[] }>("/edit/knowledge/get", { name }, {
+    handleUnauthorized: false,
+  });
+}
+
+export async function saveKnowledgeBase(name: string, oldName: string | null) {
+  return apiPost<{ name: string }>("/edit/knowledge/save", {
+    name, old_name: oldName || null,
   }, { handleUnauthorized: false });
 }
 
 export const deleteGlossSet = (name: string) =>
-  apiPost("/edit/glossary/delete", { name }, { handleUnauthorized: false });
+  apiPost("/edit/knowledge/delete", { name }, { handleUnauthorized: false });
+
+export const saveKnowledgeEntry = (name: string, entry: Partial<KnowledgeEntry>) =>
+  apiPost<{ entry: KnowledgeEntry }>("/edit/knowledge/entry/save", { name, entry }, {
+    handleUnauthorized: false,
+  });
+
+export const reviewKnowledgeEntries = (name: string, ids: string[], action: "approve" | "reject") =>
+  apiPost<{ changed: number }>("/edit/knowledge/entry/review", { name, ids, action }, {
+    handleUnauthorized: false,
+  });
+
+export const deleteKnowledgeEntry = (name: string, entryId: string) =>
+  apiPost("/edit/knowledge/entry/delete", { name, entry_id: entryId }, {
+    handleUnauthorized: false,
+  });
 
 // ── 转写选项弹窗：与页内确认框同样的 Promise 模式 ────────────────────────────
 let speakerResolve: ((value: SpeakerResult | null) => void) | null = null;

@@ -93,7 +93,7 @@ export function SpeakerModal() {
   }, [open, gmOpen, exampleOpen]);
 
   const glossOptions: SelectOption[] = loading
-    ? [{ value: "", label: "正在加载术语表…" }]
+    ? [{ value: "", label: "正在加载知识库…" }]
     : [{ value: "", label: "不使用（默认）" }, ...Object.keys(sets ?? {}).map(name => ({ value: name, label: name }))];
 
   const kindOptions: SelectOption[] = (["empty", "ja", "zh", "bi"] as AxisKind[])
@@ -247,7 +247,7 @@ export function SpeakerModal() {
 
           {showOptions && !importOnly && (
             <section className="sec">
-              <div className="sec-title">专业术语表</div>
+              <div className="sec-title">知识库</div>
               <div className="field">
                 <div className="row">
                   <CustomSelect id="gloss-sel" value={glossValue} options={glossOptions}
@@ -255,7 +255,7 @@ export function SpeakerModal() {
                   <button id="gloss-edit" className="btn" type="button"
                     onClick={() => openGlossaryManager(glossValue)}>编辑</button>
                 </div>
-                <div className="hint">选一套注入转写，约束专有名词/人名/黑话的译法；「编辑」可查看、新建、修改</div>
+                <div className="hint">选一套知识库注入；校订并在编辑器中点击学习后，可自动学习术语、背景与证据</div>
               </div>
             </section>
           )}
@@ -314,7 +314,7 @@ export function SpeakerModal() {
                   {copyState === "done" ? "已复制" : "复制 Prompt"}
                 </button>
                 <button className="btn" type="button"
-                onClick={() => setExampleOpen(false)}>关闭</button>
+                  onClick={() => setExampleOpen(false)}>关闭</button>
               </div>
             </footer>
           </section>

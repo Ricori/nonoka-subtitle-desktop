@@ -68,48 +68,6 @@ export const phFace = (id: string) => phHash(id, 0x5bd1e995) % PH_FACE_N;
 /** 换个 mix 参数，让色相和表情不绑定 */
 export const phHue = (id: string) => phHash(id, 0x2545f491) % 360;
 
-// ── 术语表 CSV 解析 / 序列化 ──────────────────────────────────────────────────
-// 格式与服务端一致。带引号的字段要按 CSV 规矩解
-export const GM_COLS = ["类别", "原词", "略称", "中文", "中文略称", "备注"];
-// 六列宽度：原词/中文是主角给最宽，类别要放得下「专有名词」「ASR纠错」，备注吃剩下的
-export const GM_WIDTHS = ["14%", "20%", "11%", "20%", "11%", "auto"];
-
-// 分隔符按内容判：整份没有半角逗号却有制表符时按 TSV 收
-export function parseCSV(text: string): string[][] {
-  const t = String(text ?? "").replace(/\r\n?/g, "\n");
-  const delim = !t.includes(",") && t.includes("\t") ? "\t" : ",";
-  const rows: string[][] = [];
-  let row: string[] = [], cell = "", quoted = false, started = false;
-  for (let i = 0; i < t.length; i++) {
-    const c = t[i];
-    if (quoted) {
-      if (c !== '"') { cell += c; continue; }
-      if (t[i + 1] === '"') { cell += '"'; i++; } else quoted = false;   // "" = 一个引号
-      continue;
-    }
-    if (c === '"' && !started) { quoted = true; started = true; continue; }   // 引号只在格首开
-    if (c === delim) { row.push(cell); cell = ""; started = false; continue; }
-    if (c === "\n") { row.push(cell); rows.push(row); row = []; cell = ""; started = false; continue; }
-    cell += c;
-    started = true;
-  }
-  if (cell || row.length) { row.push(cell); rows.push(row); }
-  return rows;
-}
-
-// CSV 文本 → 六列的行数组：吃掉表头、缺列补空、丢掉纯空行
-export function csvToRows(text: string): string[][] {
-  const rows = parseCSV(text);
-  if (rows.length && (rows[0][0] || "").trim() === "类别") rows.shift();
-  return rows
-    .map(r => GM_COLS.map((_, i) => (r[i] || "").replace(/\n/g, " ").trim()))
-    .filter(r => r.some(Boolean));
-}
-
-export const csvCell = (s: string) => /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
-export const rowsToCsv = (rows: string[][]) =>
-  [GM_COLS.join(","), ...rows.map(r => r.map(csvCell).join(","))].join("\n") + "\n";
-
 // ── 流水线阶段文案 ────────────────────────────────────────────────────────────
 export const PIPE_TEXT: Record<string, string> = { audio: "抽音频", upload: "上传", start: "启动任务" };
 
@@ -193,6 +151,27 @@ export function pipePct(pipe: PipeState): number {
 export function inR2(it: MergedVideoItem): boolean {
   if (!it.remote || it.media === "audio") return false;
   return it.remote.has_r2 ?? RUNNING.has(it.status);
+}
+
+// ── 视频可用性 ────────────────────────────────────────────────────────────────
+export type AvailKind = "cached" | "local" | "cloud" | "missing";
+
+/** 菜单顺序 = 角标判定顺序，从「最可用」到「不可用」 */
+export const AVAIL_ORDER: AvailKind[] = ["cached", "local", "cloud", "missing"];
+
+export const AVAIL_META: Record<AvailKind, { label: string; ico: string; cls: string }> = {
+  cached: { label: "已缓存", ico: "✓", cls: "c-ok" },
+  local: { label: "本机视频", ico: "✓", cls: "c-ok" },
+  cloud: { label: "云端文件", ico: "☁", cls: "c-cloud" },
+  missing: { label: "视频缺失", ico: "⚠", cls: "c-warn" },
+};
+
+/** 每张卡片只归一类：筛选和角标共用它，免得两边判定跑偏 */
+export function availKind(it: MergedVideoItem, cached: boolean, hasSrc: boolean): AvailKind {
+  if (cached) return "cached";
+  if (hasSrc) return "local";
+  if (inR2(it)) return "cloud";
+  return "missing";
 }
 
 // 提交转写的前置条件：本机没在跑流水线、云端没有进行中的任务、并发锁没被点播平台占着

@@ -1,29 +1,52 @@
-/* ── 专业术语表管理 ─────────────────────────────────────
-       两个入口：顶栏菜单，以及转写选项里术语表下拉旁的「编辑」。左侧一栏选表，右侧
-       「表格 / CSV」两个视图编辑同一份内容：表格适合改一两条，CSV 适合从别处整份粘
-       进来。改与不改由服务端下发的 can_edit 决定（只有创建者和管理员能改），只读时
-       整块灰掉、保存/删除按钮直接不给。 */
-
-/* 从转写选项里叫出来时要盖住它（.mask 默认 50），但得让确认框（.ask-mask 55）
-       压在自己上面——关窗前那句「有未保存的修改」不能被自己挡住 */
+/* 自学习知识库管理：左侧选库，中间知识流，右侧条目与证据。 */
 .mask.gm-mask {
   z-index: 54;
 }
 
 .modal.gm {
-  width: 940px;
-  max-width: 94vw;
+  width: 1120px;
+  max-width: 96vw;
 }
 
 .gm-wrap {
+  position: relative;
   display: flex;
   gap: 14px;
-  height: 62vh;
-  min-height: 340px;
+  height: 68vh;
+  min-height: 430px;
+}
+
+.gm-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--panel) 92%, transparent);
+  color: var(--mut);
+  font-size: 12px;
+  backdrop-filter: blur(2px);
+}
+
+.gm-spinner {
+  width: 25px;
+  height: 25px;
+  border: 3px solid var(--line);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: gm-spin .75s linear infinite;
+}
+
+@keyframes gm-spin {
+  to { transform: rotate(360deg); }
 }
 
 .gm-side {
-  flex: 0 0 186px;
+  flex: 0 0 190px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -32,22 +55,19 @@
 
 .gm-list {
   flex: 1;
-  min-height: 0;
   overflow: auto;
   display: flex;
   flex-direction: column;
   gap: 3px;
-  padding-right: 2px;
 }
 
 .gm-item {
   width: 100%;
-  padding: 8px 10px;
+  padding: 9px 10px;
   background: transparent;
   border: 1px solid transparent;
   border-radius: 10px;
   color: var(--text);
-  font-size: 12.5px;
   text-align: left;
 }
 
@@ -66,6 +86,7 @@
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+  font-size: 12.5px;
 }
 
 .gm-item .m {
@@ -75,22 +96,12 @@
   color: var(--faint);
 }
 
-.gm-item.on .m {
-  color: color-mix(in srgb, var(--accent) 72%, transparent);
-}
-
 .gm-main {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 10px;
-}
-
-/* 右侧编辑区与占位互斥显示，两者的 display:flex 会盖过 hidden 属性的 UA 样式 */
-.gm-main[hidden],
-.gm-blank[hidden] {
-  display: none;
 }
 
 .gm-head {
@@ -107,10 +118,9 @@
   border: 1px solid var(--line);
   border-radius: 9px;
   color: var(--text);
-  font-family: inherit;
+  font: inherit;
   font-size: 13px;
   outline: none;
-  transition: border-color .13s, box-shadow .13s;
 }
 
 .gm-name:focus {
@@ -118,16 +128,12 @@
   box-shadow: 0 0 0 3px var(--accent-dim);
 }
 
-/* 只读态：名字框和单元格都灰下去，一眼看出这套表不归自己改 */
-.gm-name:disabled,
-.gm-tb input:disabled {
+.gm-name:disabled {
   color: var(--mut);
-  cursor: default;
 }
 
 .gm-tag {
-  flex: 0 0 auto;
-  padding: 4px 10px;
+  padding: 4px 9px;
   border-radius: 999px;
   background: var(--raised);
   border: 1px solid var(--line);
@@ -142,130 +148,302 @@
   color: var(--accent);
 }
 
-.gm-table-wrap {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
-  border: 1px solid var(--line-soft);
-  border-radius: 12px;
-  background: var(--bg);
-}
-
-.gm-tb {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
-  font-size: 12px;
-}
-
-.gm-tb thead th {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  padding: 7px 9px;
-  background: var(--raised);
-  color: var(--mut);
-  font-weight: 600;
-  font-size: 11px;
-  text-align: left;
-  white-space: nowrap;
-  border-bottom: 1px solid var(--line);
-}
-
-.gm-tb td {
-  padding: 1px;
+.gm-tabs {
+  display: flex;
+  gap: 4px;
   border-bottom: 1px solid var(--line-soft);
 }
 
-/* 单元格输入框平时不画边框（六列全画满屏都是框），hover/聚焦才浮出来 */
-.gm-tb input {
-  width: 100%;
-  padding: 6px 7px;
+.gm-tabs button {
+  padding: 7px 10px;
   background: transparent;
-  border: 1px solid transparent;
-  border-radius: 7px;
-  color: var(--text);
-  font-family: inherit;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: var(--mut);
   font-size: 12px;
-  outline: none;
 }
 
-.gm-tb input:hover:not(:disabled) {
-  border-color: var(--line);
+.gm-tabs button.on {
+  border-bottom-color: var(--accent);
+  color: var(--accent);
 }
 
-.gm-tb input:focus {
-  background: var(--panel);
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-dim);
-}
-
-.gm-tb .x {
-  width: 24px;
-  height: 24px;
-  background: none;
-  border: none;
-  border-radius: 6px;
+.gm-tabs b {
+  margin-left: 5px;
+  font-size: 10px;
   color: var(--faint);
-  font-size: 13px;
-  line-height: 1;
 }
 
-.gm-tb .x:hover {
-  background: color-mix(in srgb, var(--warn) 16%, transparent);
-  color: var(--warn);
+.gm-tabs .gm-add {
+  margin-left: auto;
+  color: var(--accent);
 }
 
-.gm-csv {
+.gm-content {
   flex: 1;
   min-height: 0;
-  width: 100%;
-  padding: 12px 14px;
-  resize: none;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(280px, .9fr) minmax(340px, 1.1fr);
+  gap: 10px;
+}
+
+.gm-entry-list {
+  min-height: 0;
+  overflow: auto;
+  padding-right: 3px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.gm-entry-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.gm-entry-list::-webkit-scrollbar-thumb {
+  background: var(--raised);
+  border-radius: 4px;
+}
+
+.gm-entry-list::-webkit-scrollbar-thumb:hover {
+  background: var(--line);
+}
+
+.gm-entry {
+  padding: 10px 12px;
+  border: 1px solid var(--line-soft);
+  border-radius: 11px;
   background: var(--bg);
+  cursor: pointer;
+}
+
+.gm-entry:hover {
+  border-color: var(--line);
+  background: var(--raised);
+}
+
+.gm-entry.on {
+  border-color: var(--accent-line);
+  background: var(--accent-dim);
+}
+
+.gm-entry.candidate {
+  border-left: 3px solid #d99a32;
+}
+
+.gm-entry.rejected {
+  opacity: .58;
+}
+
+.gm-entry-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.gm-kind,
+.gm-status,
+.gm-confidence {
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: var(--raised);
+  color: var(--mut);
+  font-size: 10px;
+}
+
+.gm-entry.candidate .gm-status {
+  background: color-mix(in srgb, #d99a32 16%, transparent);
+  color: #d99a32;
+}
+
+.gm-confidence {
+  margin-left: auto;
+}
+
+.gm-entry strong {
+  display: block;
+  font-size: 13px;
+}
+
+.gm-target {
+  margin-top: 4px;
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.gm-alias,
+.gm-entry-meta {
+  margin-top: 4px;
+  color: var(--faint);
+  font-size: 10.5px;
+}
+
+.gm-review {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.gm-review .btn {
+  padding: 4px 9px;
+  font-size: 11px;
+}
+
+.gm-empty,
+.gm-create-hint {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  color: var(--faint);
+  text-align: center;
+  line-height: 1.7;
+}
+
+.gm-editor {
+  min-height: 0;
+  overflow: auto;
+  padding: 12px;
   border: 1px solid var(--line-soft);
   border-radius: 12px;
-  color: var(--text);
-  font-family: var(--font-mono);
+  background: var(--bg);
+}
+
+.gm-editor.is-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gm-editor-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: var(--faint);
   font-size: 12px;
-  line-height: 1.75;
+}
+
+.gm-editor::-webkit-scrollbar {
+  width: 8px;
+}
+
+.gm-editor::-webkit-scrollbar-thumb {
+  background: var(--raised);
+  border-radius: 4px;
+}
+
+.gm-editor::-webkit-scrollbar-thumb:hover {
+  background: var(--line);
+}
+
+.gm-editor h3 {
+  margin: 0 0 9px;
+  font-size: 13px;
+}
+
+.gm-editor label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+  color: var(--mut);
+  font-size: 11px;
+}
+
+.gm-editor input,
+.gm-editor select,
+.gm-editor textarea {
+  width: 100%;
+  padding: 7px 9px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
   outline: none;
 }
 
-.gm-csv:focus {
+.gm-editor textarea {
+  min-height: 72px;
+  resize: vertical;
+  line-height: 1.55;
+}
+
+.gm-editor input:focus,
+.gm-editor select:focus,
+.gm-editor textarea:focus {
   border-color: var(--accent);
 }
 
+.gm-evidence {
+  margin-top: 11px;
+  padding-top: 9px;
+  border-top: 1px solid var(--line-soft);
+  font-size: 11px;
+}
+
+.gm-evidence>div {
+  margin-top: 7px;
+  padding: 7px;
+  border-radius: 8px;
+  background: var(--raised);
+}
+
+.gm-evidence span {
+  color: var(--faint);
+  font-size: 10px;
+}
+
+.gm-evidence p {
+  margin: 3px 0 0;
+  line-height: 1.5;
+}
+
+.gm-editor-actions,
 .gm-foot {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
+  margin-top: 10px;
 }
 
+.gm-editor-actions span,
 .gm-foot .sp {
   flex: 1;
 }
 
 .gm-note {
-  font-size: 11.5px;
   color: var(--faint);
+  font-size: 11px;
 }
 
-/* 一套表都没有 / 没选中时右侧的占位 */
 .gm-blank {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
   color: var(--faint);
-  font-size: 13px;
   text-align: center;
   line-height: 1.7;
 }
 
 .gm-blank .big {
-  font-size: 26px;
+  font-size: 28px;
 }
-
+
+@media (max-width: 850px) {
+  .gm-content {
+    grid-template-columns: 1fr;
+  }
+
+  .gm-editor {
+    max-height: 34vh;
+  }
+}
