@@ -24,6 +24,12 @@ export const bootStore = createStore<BootState>({
   mandatoryActive: false, mandatoryStatus: null, updateBanner: null, news: null,
 });
 
+// 闸门（FFmpeg 安装 / 强制更新）占据界面时启动页要让位，否则两层全屏内容叠在一起。
+// 判定条件与 UpdateGateModal 的分支保持一致
+export const gateOpen = (s: BootState) =>
+  (s.mandatoryActive && !!s.mandatoryStatus) ||
+  (!s.initialCheckPending && !!s.ffmpegStatus && s.ffmpegStatus.state !== "ready");
+
 export const retryFfmpeg = async () => bootStore.set({ ffmpegStatus: await window.desktop.ffmpeg.retry() });
 export const installUpdate = () => window.desktop.installUpdate();
 export const clearNews = () => bootStore.set({ news: null });

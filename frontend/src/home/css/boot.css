@@ -8,7 +8,8 @@
   align-items: center;
   justify-content: center;
   gap: 18px;
-  background: inherit;
+  /* 父级是无背景的 #root，inherit 会解析成透明，得直接给不透明底色 */
+  background: var(--page-bg);
   /* 这个状态下 .topbar 整个不渲染，窗口拖动/双击最大化得靠它自己顶着 */
   -webkit-app-region: drag;
 }
@@ -43,4 +44,4 @@ body[data-app="boot"] #boot {
     transform: rotate(360deg);
   }
 }
-
+

@@ -8,8 +8,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -18,13 +20,18 @@ import (
 )
 
 const (
-	ffmpegVersion     = "6.1.1"
-	ffmpegRelease     = "b6.1.1"
-	ffmpegSHA256      = "04e1307997530f9cf2fe35cba2ca7e8875ca91da02f89d6c7243df819c94ad00"
-	ffmpegURL         = "https://livestream.nonoka.online/desktop-updates/ffmpeg-static/b6.1.1/ffmpeg-win32-x64.gz"
-	ffmpegFallbackURL = "https://github.com/eugeneware/ffmpeg-static/releases/download/b6.1.1/ffmpeg-win32-x64.gz"
-	ffmpegLicenseURL  = "https://livestream.nonoka.online/desktop-updates/ffmpeg-static/b6.1.1/win32-x64.LICENSE"
+	ffmpegVersion  = "6.1.1"
+	ffmpegRelease  = "b6.1.1"
+	ffmpegMirror   = "https://livestream.nonoka.online/desktop-updates/ffmpeg-static/" + ffmpegRelease + "/"
+	ffmpegUpstream = "https://github.com/eugeneware/ffmpeg-static/releases/download/" + ffmpegRelease + "/"
 )
+
+// ffmpeg-static 各平台的包名，以及解压后二进制的 SHA-256
+var ffmpegBuilds = map[string]struct{ Asset, SHA256 string }{
+	"windows/amd64": {"win32-x64", "04e1307997530f9cf2fe35cba2ca7e8875ca91da02f89d6c7243df819c94ad00"},
+	"darwin/arm64":  {"darwin-arm64", "a90e3db6a3fd35f6074b013f948b1aa45b31c6375489d39e572bea3f18336584"},
+	"darwin/amd64":  {"darwin-x64", "ebdddc936f61e14049a2d4b549a412b8a40deeff6540e58a9f2a2da9e6b18894"},
+}
 
 type FFmpegStatus struct {
 	State   string `json:"state"`
@@ -36,13 +43,16 @@ type FFmpegStatus struct {
 }
 
 type ffmpegOptions struct {
-	URL         string
-	FallbackURL string
-	LicenseURL  string
-	SHA256      string
-	Path        string
-	Client      *http.Client
-	Emit        func(FFmpegStatus)
+	URL                string
+	FallbackURL        string
+	LicenseURL         string
+	LicenseFallbackURL string
+	SHA256             string
+	Path               string
+	Client             *http.Client
+	Emit               func(FFmpegStatus)
+	// 补 ad-hoc 签名，仅 darwin 需要；nil 表示不签
+	Codesign func(path string) error
 }
 
 type FFmpegManager struct {
@@ -58,15 +68,23 @@ func newFFmpegManager(paths AppPaths, emit func(FFmpegStatus)) *FFmpegManager {
 	if runtime.GOOS == "windows" {
 		name += ".exe"
 	}
-	return newFFmpegManagerWithOptions(ffmpegOptions{
-		URL:         ffmpegURL,
-		FallbackURL: ffmpegFallbackURL,
-		LicenseURL:  ffmpegLicenseURL,
-		SHA256:      ffmpegSHA256,
-		Path:        filepath.Join(paths.FFmpegDir, ffmpegRelease, name),
-		Client:      &http.Client{Timeout: 20 * time.Minute},
-		Emit:        emit,
-	})
+	options := ffmpegOptions{
+		Path:   filepath.Join(paths.FFmpegDir, ffmpegRelease, name),
+		Client: &http.Client{Timeout: 20 * time.Minute},
+		Emit:   emit,
+	}
+	if runtime.GOOS == "darwin" {
+		options.Codesign = adhocCodesign
+	}
+	// 镜像优先、上游兜底：镜像没同步的平台会自动落到 GitHub
+	if build, ok := ffmpegBuilds[runtime.GOOS+"/"+runtime.GOARCH]; ok {
+		options.URL = ffmpegMirror + "ffmpeg-" + build.Asset + ".gz"
+		options.FallbackURL = ffmpegUpstream + "ffmpeg-" + build.Asset + ".gz"
+		options.LicenseURL = ffmpegMirror + build.Asset + ".LICENSE"
+		options.LicenseFallbackURL = ffmpegUpstream + build.Asset + ".LICENSE"
+		options.SHA256 = build.SHA256
+	}
+	return newFFmpegManagerWithOptions(options)
 }
 
 func newFFmpegManagerWithOptions(options ffmpegOptions) *FFmpegManager {
@@ -137,13 +155,13 @@ func (m *FFmpegManager) Ensure(ctx context.Context) (string, error) {
 
 func (m *FFmpegManager) ensure(ctx context.Context) (string, error) {
 	m.setStatus("checking", 0, 0, "")
-	if ok, err := verifyFileSHA256(m.options.Path, m.options.SHA256); err == nil && ok {
+	if m.installed() {
 		go m.downloadLicense()
 		return m.options.Path, nil
 	}
 	_ = os.Remove(m.options.Path)
-	if runtime.GOOS != "windows" || runtime.GOARCH != "amd64" {
-		return "", fmt.Errorf("原型暂不支持自动安装 %s/%s 的 FFmpeg", runtime.GOOS, runtime.GOARCH)
+	if m.options.URL == "" || m.options.SHA256 == "" {
+		return "", fmt.Errorf("暂不支持自动安装 %s/%s 的 FFmpeg", runtime.GOOS, runtime.GOARCH)
 	}
 	if err := os.MkdirAll(filepath.Dir(m.options.Path), 0o755); err != nil {
 		return "", err
@@ -200,8 +218,57 @@ func (m *FFmpegManager) ensure(ctx context.Context) (string, error) {
 		return "", err
 	}
 	_ = os.Chmod(m.options.Path, 0o755)
+	if err := m.sign(); err != nil {
+		_ = os.Remove(m.options.Path)
+		return "", err
+	}
 	go m.downloadLicense()
 	return m.options.Path, nil
+}
+
+// 已装好的判定。macOS 上补签名会改动文件内容，官方包哈希就对不上了，
+// 改用装好时记下的旁车哈希，否则每次启动都会误判损坏、重新下载。
+func (m *FFmpegManager) installed() bool {
+	if ok, err := verifyFileSHA256(m.options.Path, m.options.SHA256); err == nil && ok {
+		return true
+	}
+	stamp, err := os.ReadFile(m.stampPath())
+	if err != nil {
+		return false
+	}
+	ok, err := verifyFileSHA256(m.options.Path, strings.TrimSpace(string(stamp)))
+	return err == nil && ok
+}
+
+func (m *FFmpegManager) stampPath() string { return m.options.Path + ".sha256" }
+
+// Apple Silicon 上没有签名的 arm64 可执行文件会被内核直接 SIGKILL，所以下载完补一次 ad-hoc 签名
+func (m *FFmpegManager) sign() error {
+	_ = os.Remove(m.stampPath())
+	if m.options.Codesign == nil {
+		return nil
+	}
+	if err := m.options.Codesign(m.options.Path); err != nil {
+		// Intel 不强制签名，签不上也能跑；arm64 签不上必崩，直接报错
+		if runtime.GOARCH == "arm64" {
+			return err
+		}
+		log.Printf("ffmpeg codesign: %v", err)
+		return nil
+	}
+	sum, err := fileSHA256(m.options.Path)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(m.stampPath(), []byte(sum), 0o644)
+}
+
+func adhocCodesign(path string) error {
+	out, err := exec.Command("codesign", "--force", "--sign", "-", path).CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("FFmpeg 签名失败：%w（%s）", err, strings.TrimSpace(string(out)))
+	}
+	return nil
 }
 
 func (m *FFmpegManager) openDownload(ctx context.Context) (*http.Response, error) {
@@ -251,11 +318,21 @@ func (m *FFmpegManager) downloadLicense() {
 	if m.options.LicenseURL == "" {
 		return
 	}
-	resp, err := m.options.Client.Get(m.options.LicenseURL)
-	if err != nil || resp.StatusCode != http.StatusOK {
-		if resp != nil {
-			resp.Body.Close()
+	var resp *http.Response
+	for _, licenseURL := range []string{m.options.LicenseURL, m.options.LicenseFallbackURL} {
+		if licenseURL == "" {
+			continue
 		}
+		got, err := m.options.Client.Get(licenseURL)
+		if err == nil && got.StatusCode == http.StatusOK {
+			resp = got
+			break
+		}
+		if got != nil {
+			got.Body.Close()
+		}
+	}
+	if resp == nil {
 		return
 	}
 	defer resp.Body.Close()
@@ -265,17 +342,25 @@ func (m *FFmpegManager) downloadLicense() {
 	}
 }
 
-func verifyFileSHA256(path, expected string) (bool, error) {
+func fileSHA256(path string) (string, error) {
 	file, err := os.Open(path)
 	if err != nil {
-		return false, err
+		return "", err
 	}
 	defer file.Close()
 	hash := sha256.New()
 	if _, err := io.Copy(hash, file); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(hash.Sum(nil)), nil
+}
+
+func verifyFileSHA256(path, expected string) (bool, error) {
+	actual, err := fileSHA256(path)
+	if err != nil {
 		return false, err
 	}
-	return strings.EqualFold(hex.EncodeToString(hash.Sum(nil)), expected), nil
+	return strings.EqualFold(actual, expected), nil
 }
 
 type downloadProgressReader struct {

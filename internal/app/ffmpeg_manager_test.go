@@ -9,16 +9,12 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
-	"runtime"
 	"sync"
 	"sync/atomic"
 	"testing"
 )
 
 func TestFFmpegManagerDownloadsVerifiesAndReuses(t *testing.T) {
-	if runtime.GOOS != "windows" || runtime.GOARCH != "amd64" {
-		t.Skip("the prototype download target is Windows x64")
-	}
 	payload := []byte("test ffmpeg binary")
 	hash := sha256.Sum256(payload)
 	var requests atomic.Int32
@@ -68,9 +64,6 @@ func TestFFmpegManagerDownloadsVerifiesAndReuses(t *testing.T) {
 }
 
 func TestFFmpegManagerRejectsBadChecksumAndCleansPart(t *testing.T) {
-	if runtime.GOOS != "windows" || runtime.GOARCH != "amd64" {
-		t.Skip("the prototype download target is Windows x64")
-	}
 	server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 		writer := gzip.NewWriter(response)
 		_, _ = writer.Write([]byte("tampered"))
@@ -94,9 +87,6 @@ func TestFFmpegManagerRejectsBadChecksumAndCleansPart(t *testing.T) {
 }
 
 func TestFFmpegManagerFallsBackAfterPrimaryNetworkFailure(t *testing.T) {
-	if runtime.GOOS != "windows" || runtime.GOARCH != "amd64" {
-		t.Skip("the prototype download target is Windows x64")
-	}
 	payload := []byte("fallback ffmpeg binary")
 	hash := sha256.Sum256(payload)
 	var fallbackRequests atomic.Int32
@@ -133,5 +123,58 @@ func TestDefaultAppPathsSupportsIsolatedDataDirectory(t *testing.T) {
 	if paths.Root != root || paths.FFmpegDir != filepath.Join(root, "ffmpeg") ||
 		paths.TempDir != filepath.Join(root, "temp") || paths.WebviewDir != filepath.Join(root, "webview") {
 		t.Fatalf("paths = %#v", paths)
+	}
+}
+
+// 补签名会改动二进制内容，官方包哈希随之对不上；装好后必须认旁车哈希，否则每次启动都重下
+func TestFFmpegManagerReusesCodesignedBinary(t *testing.T) {
+	payload := []byte("test ffmpeg binary")
+	hash := sha256.Sum256(payload)
+	var requests atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+		requests.Add(1)
+		writer := gzip.NewWriter(response)
+		_, _ = writer.Write(payload)
+		_ = writer.Close()
+	}))
+	defer server.Close()
+
+	path := filepath.Join(t.TempDir(), "ffmpeg")
+	options := func(codesign func(string) error) ffmpegOptions {
+		return ffmpegOptions{
+			URL: server.URL, SHA256: hex.EncodeToString(hash[:]), Path: path,
+			Client: server.Client(), Codesign: codesign,
+		}
+	}
+
+	// 模拟 codesign：往尾部塞一段签名，文件哈希跟着变
+	manager := newFFmpegManagerWithOptions(options(func(target string) error {
+		return os.WriteFile(target, append(append([]byte{}, payload...), []byte("-adhoc-signature")...), 0o755)
+	}))
+	if _, err := manager.Ensure(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+
+	// 重开进程：新 manager 面对的是已签名的文件，应直接判定装好而不是重新下载
+	restarted := newFFmpegManagerWithOptions(options(nil))
+	if _, err := restarted.Ensure(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if requests.Load() != 1 {
+		t.Fatalf("requests = %d, want 1（签名后被误判损坏，重新下载了）", requests.Load())
+	}
+	if got := restarted.Status().State; got != "ready" {
+		t.Fatalf("state = %q, want ready", got)
+	}
+
+	// 二进制被改坏且与旁车哈希不符时，仍应重新下载
+	if err := os.WriteFile(path, []byte("corrupted"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := newFFmpegManagerWithOptions(options(nil)).Ensure(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if requests.Load() != 2 {
+		t.Fatalf("requests = %d, want 2（损坏的二进制没有被重新下载）", requests.Load())
 	}
 }
