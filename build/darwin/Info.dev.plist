@@ -3,7 +3,7 @@
 <plist version="1.0">
 	<dict>
 		<key>CFBundleExecutable</key>
-		<string>nonoka-subtitle-wails</string>
+		<string>Nonoka Subtitle</string>
 		<key>CFBundleGetInfoString</key>
 		<string>Parallel Wails implementation; Electron remains the production desktop app.</string>
 		<key>CFBundleIconFile</key>
