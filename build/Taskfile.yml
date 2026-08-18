@@ -193,14 +193,13 @@ tasks:
     sources:
       - "../frontend/public/assets/icon.png"
       - "../frontend/public/assets/icon_32x32.ico"
-      - "appicon.icon"
     generates:
       - "appicon.png"
       - "darwin/icons.icns"
       - "windows/icon.ico"
     cmds:
       - wails3 tool cp ../frontend/public/assets/icon.png appicon.png
-      - wails3 generate icons -input appicon.png -macfilename darwin/icons.icns -windowsfilename windows/icon.ico -iconcomposerinput appicon.icon -macassetdir darwin
+      - wails3 generate icons -input appicon.png -macfilename darwin/icons.icns -windowsfilename windows/icon.ico
       - wails3 tool cp ../frontend/public/assets/icon_32x32.ico windows/icon.ico
 
   dev:frontend:
